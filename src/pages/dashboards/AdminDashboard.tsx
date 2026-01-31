@@ -5,12 +5,16 @@ import { AppointmentList } from '@/components/dashboard/AppointmentList';
 import { PatientTable } from '@/components/dashboard/PatientTable';
 import { DepartmentCard } from '@/components/dashboard/DepartmentCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { mockPatients, mockAppointments, mockDepartments } from '@/data/mockData';
+import { useHospitalData } from '@/contexts/HospitalDataContext';
 
 export function AdminDashboard() {
-  const todayAppointments = mockAppointments.filter(
+  const { patients, appointments, departments } = useHospitalData();
+
+  const todayAppointments = appointments.filter(
     (a) => a.date === '2024-01-20' && a.status !== 'cancelled'
   );
+
+  const admittedPatients = patients.filter(p => p.status === 'admitted' || p.status === 'critical');
 
   return (
     <DashboardLayout 
@@ -21,7 +25,7 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Total Patients"
-          value="1,284"
+          value={patients.length}
           change={12}
           trend="up"
           icon={Users}
@@ -34,8 +38,8 @@ export function AdminDashboard() {
           icon={Calendar}
         />
         <StatsCard
-          title="Available Beds"
-          value="45/120"
+          title="Admitted Patients"
+          value={admittedPatients.length}
           change={-3}
           trend="down"
           icon={Bed}
@@ -66,14 +70,14 @@ export function AdminDashboard() {
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-foreground mb-4">Departments Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockDepartments.map((dept) => (
+          {departments.map((dept) => (
             <DepartmentCard key={dept.id} department={dept} />
           ))}
         </div>
       </div>
 
       {/* Patients Table */}
-      <PatientTable patients={mockPatients} />
+      <PatientTable patients={patients} />
     </DashboardLayout>
   );
 }

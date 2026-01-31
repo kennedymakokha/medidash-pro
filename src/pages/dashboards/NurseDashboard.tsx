@@ -1,12 +1,23 @@
+import { useState } from 'react';
 import { Activity, Heart, Thermometer, AlertTriangle, CheckSquare, ClipboardList } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { mockPatients } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useHospitalData } from '@/contexts/HospitalDataContext';
+import { toast } from '@/hooks/use-toast';
 
-const vitalTasks = [
+interface VitalTask {
+  id: number;
+  patient: string;
+  room: string;
+  task: string;
+  time: string;
+  status: 'pending' | 'urgent' | 'completed';
+}
+
+const initialVitalTasks: VitalTask[] = [
   { id: 1, patient: 'John Smith', room: '201', task: 'Blood Pressure Check', time: '09:00 AM', status: 'pending' },
   { id: 2, patient: 'Robert Williams', room: 'ICU-3', task: 'Vital Signs Monitor', time: '09:30 AM', status: 'urgent' },
   { id: 3, patient: 'David Brown', room: '305', task: 'Medication Administration', time: '10:00 AM', status: 'pending' },
@@ -15,8 +26,38 @@ const vitalTasks = [
 ];
 
 export function NurseDashboard() {
-  const criticalPatients = mockPatients.filter(p => p.status === 'critical');
-  const admittedPatients = mockPatients.filter(p => p.status === 'admitted');
+  const { patients } = useHospitalData();
+  const [vitalTasks, setVitalTasks] = useState<VitalTask[]>(initialVitalTasks);
+
+  const criticalPatients = patients.filter(p => p.status === 'critical');
+  const admittedPatients = patients.filter(p => p.status === 'admitted');
+
+  const handleStartTask = (taskId: number) => {
+    setVitalTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, status: 'completed' as const } : task
+      )
+    );
+    const task = vitalTasks.find((t) => t.id === taskId);
+    toast({
+      title: "Task Completed",
+      description: `${task?.task} for ${task?.patient} has been marked as done.`,
+    });
+  };
+
+  const handleMonitorPatient = (patientName: string) => {
+    toast({
+      title: "Monitoring Started",
+      description: `Now monitoring ${patientName}'s vitals.`,
+    });
+  };
+
+  const handleRecordVitals = (patientName: string) => {
+    toast({
+      title: "Vitals Recorded",
+      description: `Vitals for ${patientName} have been recorded.`,
+    });
+  };
 
   return (
     <DashboardLayout 
@@ -80,8 +121,12 @@ export function NurseDashboard() {
                     </div>
                   </div>
                   {task.status !== 'completed' && (
-                    <Button variant={task.status === 'urgent' ? 'destructive' : 'outline'} size="sm">
-                      {task.status === 'urgent' ? 'Urgent' : 'Start'}
+                    <Button 
+                      variant={task.status === 'urgent' ? 'destructive' : 'outline'} 
+                      size="sm"
+                      onClick={() => handleStartTask(task.id)}
+                    >
+                      {task.status === 'urgent' ? 'Urgent - Complete' : 'Complete'}
                     </Button>
                   )}
                 </div>
@@ -112,11 +157,18 @@ export function NurseDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleRecordVitals(patient.name)}
+                    >
                       <Thermometer className="w-4 h-4 mr-1" />
                       Vitals
                     </Button>
-                    <Button size="sm">
+                    <Button 
+                      size="sm"
+                      onClick={() => handleMonitorPatient(patient.name)}
+                    >
                       <Heart className="w-4 h-4 mr-1" />
                       Monitor
                     </Button>

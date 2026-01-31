@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -16,16 +16,18 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/hospital';
+import { toast } from '@/hooks/use-toast';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
   roles: UserRole[];
+  implemented?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
   { label: 'Patients', href: '/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
   { label: 'Appointments', href: '/appointments', icon: Calendar, roles: ['admin', 'doctor', 'receptionist'] },
   { label: 'Doctors', href: '/doctors', icon: Stethoscope, roles: ['admin', 'receptionist'] },
@@ -39,11 +41,35 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const filteredNavItems = navItems.filter(
     (item) => user && item.roles.includes(user.role)
   );
+
+  const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
+    if (!item.implemented) {
+      e.preventDefault();
+      toast({
+        title: "Coming Soon",
+        description: `The ${item.label} page is under development.`,
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Coming Soon",
+      description: "Settings page is under development.",
+    });
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-50">
@@ -67,16 +93,21 @@ export function Sidebar() {
           return (
             <Link
               key={item.href}
-              to={item.href}
+              to={item.implemented ? item.href : '#'}
+              onClick={(e) => handleNavClick(e, item)}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                 isActive
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                !item.implemented && "opacity-70"
               )}
             >
               <item.icon className="w-5 h-5" />
               {item.label}
+              {!item.implemented && (
+                <span className="ml-auto text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded">Soon</span>
+              )}
             </Link>
           );
         })}
@@ -97,15 +128,15 @@ export function Sidebar() {
         </div>
         
         <div className="flex gap-2">
-          <Link
-            to="/settings"
+          <button
+            onClick={handleSettingsClick}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
           >
             <Settings className="w-4 h-4" />
             Settings
-          </Link>
+          </button>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="w-4 h-4" />
