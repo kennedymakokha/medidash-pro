@@ -3,13 +3,14 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { AppointmentList } from '@/components/dashboard/AppointmentList';
 import { PatientTable } from '@/components/dashboard/PatientTable';
-import { mockPatients, mockAppointments } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHospitalData } from '@/contexts/HospitalDataContext';
 
 export function DoctorDashboard() {
   const { user } = useAuth();
+  const { patients, appointments } = useHospitalData();
   
-  const myAppointments = mockAppointments.filter(
+  const myAppointments = appointments.filter(
     (a) => a.doctorName === user?.name
   );
   
@@ -17,7 +18,7 @@ export function DoctorDashboard() {
     (a) => a.date === '2024-01-20'
   );
 
-  const myPatients = mockPatients.filter(
+  const myPatients = patients.filter(
     (p) => p.assignedDoctor === user?.name
   );
 

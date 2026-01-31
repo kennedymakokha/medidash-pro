@@ -1,25 +1,68 @@
+import { useState } from 'react';
 import { Calendar, UserPlus, Clock, Users, Phone, CheckCircle } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { AppointmentList } from '@/components/dashboard/AppointmentList';
-import { mockPatients, mockAppointments } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useHospitalData } from '@/contexts/HospitalDataContext';
+import { PatientFormModal } from '@/components/modals/PatientFormModal';
+import { AppointmentFormModal } from '@/components/modals/AppointmentFormModal';
+import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
+import { toast } from '@/hooks/use-toast';
+import { Patient } from '@/types/hospital';
 
-const waitingQueue = [
+interface WaitingPatient {
+  id: number;
+  name: string;
+  checkIn: string;
+  doctor: string;
+  status: 'waiting' | 'in-consultation';
+}
+
+const initialWaitingQueue: WaitingPatient[] = [
   { id: 1, name: 'Emily Carter', checkIn: '08:45 AM', doctor: 'Dr. Michael Chen', status: 'waiting' },
   { id: 2, name: 'James Anderson', checkIn: '09:00 AM', doctor: 'Dr. Sarah Lee', status: 'waiting' },
   { id: 3, name: 'Sophia Martinez', checkIn: '09:15 AM', doctor: 'Dr. Michael Chen', status: 'in-consultation' },
 ];
 
 export function ReceptionistDashboard() {
-  const todayAppointments = mockAppointments.filter(
+  const { patients, appointments, addPatient, addAppointment } = useHospitalData();
+  const [waitingQueue, setWaitingQueue] = useState<WaitingPatient[]>(initialWaitingQueue);
+  const [patientModalOpen, setPatientModalOpen] = useState(false);
+  const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
+  const [selectedPatientForAppointment, setSelectedPatientForAppointment] = useState<Patient | null>(null);
+  const [viewPatient, setViewPatient] = useState<Patient | null>(null);
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+
+  const todayAppointments = appointments.filter(
     (a) => a.date === '2024-01-20'
   );
 
-  const upcomingAppointments = mockAppointments.filter(
-    (a) => a.date === '2024-01-21'
-  );
+  const handleCallPatient = (id: number) => {
+    setWaitingQueue((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, status: 'in-consultation' as const } : p
+      )
+    );
+    const patient = waitingQueue.find((p) => p.id === id);
+    toast({
+      title: "Patient Called",
+      description: `${patient?.name} has been called for consultation.`,
+    });
+  };
+
+  const handleBookAppointment = (patient: Patient) => {
+    setSelectedPatientForAppointment(patient);
+    setAppointmentModalOpen(true);
+  };
+
+  const handlePatientInquiry = () => {
+    toast({
+      title: "Patient Inquiry",
+      description: "Use the search function in the header to find patient records.",
+    });
+  };
 
   return (
     <DashboardLayout 
@@ -44,23 +87,37 @@ export function ReceptionistDashboard() {
           icon={CheckCircle}
         />
         <StatsCard
-          title="New Registrations"
-          value="8"
+          title="Total Patients"
+          value={patients.length}
           icon={UserPlus}
         />
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Button className="h-16 text-base gap-3">
+        <Button 
+          className="h-16 text-base gap-3"
+          onClick={() => setPatientModalOpen(true)}
+        >
           <UserPlus className="w-5 h-5" />
           Register New Patient
         </Button>
-        <Button variant="outline" className="h-16 text-base gap-3">
+        <Button 
+          variant="outline" 
+          className="h-16 text-base gap-3"
+          onClick={() => {
+            setSelectedPatientForAppointment(null);
+            setAppointmentModalOpen(true);
+          }}
+        >
           <Calendar className="w-5 h-5" />
           Schedule Appointment
         </Button>
-        <Button variant="outline" className="h-16 text-base gap-3">
+        <Button 
+          variant="outline" 
+          className="h-16 text-base gap-3"
+          onClick={handlePatientInquiry}
+        >
           <Phone className="w-5 h-5" />
           Patient Inquiry
         </Button>
@@ -89,12 +146,22 @@ export function ReceptionistDashboard() {
                       </p>
                     </div>
                   </div>
-                  <Badge 
-                    variant={patient.status === 'in-consultation' ? 'default' : 'secondary'}
-                    className="capitalize"
-                  >
-                    {patient.status.replace('-', ' ')}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {patient.status === 'waiting' && (
+                      <Button 
+                        size="sm"
+                        onClick={() => handleCallPatient(patient.id)}
+                      >
+                        Call Patient
+                      </Button>
+                    )}
+                    <Badge 
+                      variant={patient.status === 'in-consultation' ? 'default' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {patient.status.replace('-', ' ')}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             ))}
@@ -124,7 +191,7 @@ export function ReceptionistDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {mockPatients.slice(0, 4).map((patient) => (
+              {patients.slice(0, 4).map((patient) => (
                 <tr key={patient.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -150,8 +217,19 @@ export function ReceptionistDashboard() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">View</Button>
-                      <Button size="sm">Book Appointment</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setViewPatient(patient)}
+                      >
+                        View
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleBookAppointment(patient)}
+                      >
+                        Book Appointment
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -160,6 +238,26 @@ export function ReceptionistDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Modals */}
+      <PatientFormModal
+        open={patientModalOpen}
+        onOpenChange={setPatientModalOpen}
+        mode="add"
+        onSubmit={addPatient}
+      />
+      <AppointmentFormModal
+        open={appointmentModalOpen}
+        onOpenChange={setAppointmentModalOpen}
+        mode="add"
+        preselectedPatient={selectedPatientForAppointment}
+        onSubmit={addAppointment}
+      />
+      <ViewPatientModal
+        open={!!viewPatient}
+        onOpenChange={(open) => !open && setViewPatient(null)}
+        patient={viewPatient}
+      />
     </DashboardLayout>
   );
 }
