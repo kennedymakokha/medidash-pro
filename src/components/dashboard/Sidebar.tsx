@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'], },
   { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'] },
   { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'] },
-  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['nurse', 'doctor'] },
+  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['nurse', 'doctor'], implemented: true },
   { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'] },
   { label: 'Reports', href: '/reports', icon: ClipboardList, roles: ['admin', 'doctor'] },
 ];

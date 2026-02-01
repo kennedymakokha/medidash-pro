@@ -8,6 +8,7 @@ import { HospitalDataProvider } from "@/contexts/HospitalDataContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Doctors from "./pages/Doctors";
+import Vitals from "./pages/Vitals";
 import NotFound from "./pages/NotFound";
 import { store } from "./store";
 import { Provider } from 'react-redux';
@@ -28,6 +29,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/departments" element={<DepartmentPage />} />
+                <Route path="/vitals" element={<Vitals />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

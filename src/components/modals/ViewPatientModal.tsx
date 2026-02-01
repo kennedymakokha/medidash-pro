@@ -36,7 +36,7 @@ export function ViewPatientModal({ open, onOpenChange, patient }: ViewPatientMod
             </div>
             <div>
               <h3 className="text-lg font-semibold text-card-foreground">{patient.name}</h3>
-              <p className="text-sm text-muted-foreground">{patient.age} years, {patient.gender}</p>
+              <p className="text-sm text-muted-foreground">{patient.age} years, {patient.sex || 'N/A'}</p>
               <Badge variant="outline" className={cn("mt-1 capitalize", statusStyles[patient.status])}>
                 {patient.status}
               </Badge>
