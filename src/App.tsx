@@ -11,6 +11,7 @@ import Doctors from "./pages/Doctors";
 import NotFound from "./pages/NotFound";
 import { store } from "./store";
 import { Provider } from 'react-redux';
+import DepartmentPage from "./pages/Departments";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -26,6 +27,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/doctors" element={<Doctors />} />
+                <Route path="/departments" element={<DepartmentPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

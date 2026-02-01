@@ -11,9 +11,8 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 body: data
             })
         }),
-        post_user: builder.mutation({
+        postuser: builder.mutation({
             query: (data) => {
-
                 return {
                     url: `${USER_URL}`,
                     method: "POST",
@@ -97,8 +96,11 @@ export const usersApiSlice = apiSlice.injectEndpoints({
                 )
             }
         }),
-        get_users: builder.query({
-            query: (data) => `${USER_URL}?role=${data.role}&page=${data.page}&limit=${data.limit}&word=${data.word}&course=${data.course}`
+        getusers: builder.query({
+            query: (data) => `${USER_URL}?role=${data.role}&page=${data.page}&limit=${data.limit}&search=${data.search}`
+        }),
+        getusersoverview: builder.query({
+            query: (data) => `${USER_URL}/overview?role=${data.role}`
         }),
         delete_user: builder.mutation({
             query: (id) => ({
@@ -123,4 +125,4 @@ export const usersApiSlice = apiSlice.injectEndpoints({
     })
 })
 
-export const { useLoginMutation, useFetch_countQuery, useEnrollUserMutation, usePost_guardianMutation, useUpdate_userMutation, useDelete_userMutation, useResetPassMutation, useRecoverPassMutation, useResendactivateMutation, useActivateMutation, useGet_usersQuery, useEditUserDetailsMutation, useLogoutMutation, usePost_userMutation, useFetchuserQuery } = usersApiSlice
+export const { useLoginMutation, useGetusersoverviewQuery, useFetch_countQuery, useEnrollUserMutation, usePost_guardianMutation, useUpdate_userMutation, useDelete_userMutation, useResetPassMutation, useRecoverPassMutation, useResendactivateMutation, useActivateMutation, useGetusersQuery, useEditUserDetailsMutation, useLogoutMutation, usePostuserMutation, useFetchuserQuery } = usersApiSlice

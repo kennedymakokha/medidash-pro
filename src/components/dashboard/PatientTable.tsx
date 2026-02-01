@@ -17,6 +17,7 @@ import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
 import { highlightText } from '@/utils/highlightText';
 import { DataTable } from '@/components/table/DataTable';
 import { useCreatepatientMutation } from '@/features/patientSlice';
+import { toast } from '@/hooks/use-toast';
 
 interface PatientTableProps {
   patients: Patient[];
@@ -46,11 +47,11 @@ export function PatientTable({
   onSearchChange,
   refetch,
 }: PatientTableProps) {
-  const [postPatient] = useCreatepatientMutation();
+
   const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [deletePatientData, setDeletePatientData] = useState<Patient | null>(null);
-
+  const [postPatient] = useCreatepatientMutation({})
   const deletePatient = async (patient: Patient | null) => {
     if (!patient) return;
     try {
@@ -61,7 +62,15 @@ export function PatientTable({
       console.error('Failed to delete patient', error);
     }
   };
+  const addPatient = async (Data: Patient) => {
+    await postPatient(Data).unwrap()
+    await refetch()
+    toast({
+      title: 'Doctor Added',
+      description: `${Data.name} has been added successfully.`,
+    });
 
+  };
   return (
     <>
       <DataTable
@@ -82,18 +91,18 @@ export function PatientTable({
             <th className="text-right px-6 py-3 text-xs font-semibold uppercase">Actions</th>
           </tr>
         }
-        rows={patients.map((patient) => (
+        rows={patients.map((patient: Patient) => (
           <tr key={patient.uuid} className="hover:bg-muted/30">
             <td className="px-6 py-4">
               <p className="font-medium">{highlightText(patient.name, search)}</p>
               <p className="text-sm text-muted-foreground">{highlightText(patient.phone ?? '', search)}</p>
             </td>
-            <td className="px-6 py-4">{calculateAge(patient.dob)} yrs</td>
+            <td className="px-6 py-4">{calculateAge(patient?.dob)} yrs</td>
             <td className="px-6 py-4">{patient.bloodgroup}</td>
             <td className="px-6 py-4">
               <Badge className={cn(statusStyles[patient.status])}>{patient.status}</Badge>
             </td>
-            <td className="px-6 py-4">{patient.assignedDoctor || '-'}</td>
+            <td className="px-6 py-4">{patient?.assignedDoctor?.name || '-'}</td>
             <td className="px-6 py-4 text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -118,7 +127,8 @@ export function PatientTable({
 
       <ViewPatientModal open={!!viewPatient} onOpenChange={() => setViewPatient(null)} patient={viewPatient} />
       <PatientFormModal
-        refetch={refetch}
+
+        onSubmit={addPatient}
         open={!!editPatient}
         onOpenChange={() => setEditPatient(null)}
         patient={editPatient}

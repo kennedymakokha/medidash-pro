@@ -36,7 +36,7 @@ const statusStyles = {
   inactive: 'bg-muted text-muted-foreground border-muted',
 };
 
-export default function DoctorsPage() {
+export default function DepartmentPage() {
   // const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
   const [search, setSearch] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);

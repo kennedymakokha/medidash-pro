@@ -6,13 +6,17 @@ import { AppointmentFormModal } from '@/components/modals/AppointmentFormModal';
 import { CreateReportModal } from '@/components/modals/CreateReportModal';
 import { AssignBedModal } from '@/components/modals/AssignBedModal';
 import { useHospitalData } from '@/contexts/HospitalDataContext';
+import { Patient } from '@/types/hospital';
+import { useCreatepatientMutation, useFetchpatientsQuery } from '@/features/patientSlice';
+import { toast } from '@/hooks/use-toast';
 
-export function QuickActions() {
-  const { addPatient, addAppointment } = useHospitalData();
+export function QuickActions({ refetch, patients, doctors }) {
+
   const [patientModalOpen, setPatientModalOpen] = useState(false);
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [bedModalOpen, setBedModalOpen] = useState(false);
+  const [postPatient] = useCreatepatientMutation({})
 
   const actions = [
     { label: 'Add Patient', icon: UserPlus, onClick: () => setPatientModalOpen(true) },
@@ -20,7 +24,24 @@ export function QuickActions() {
     { label: 'Create Report', icon: FileText, onClick: () => setReportModalOpen(true) },
     { label: 'Assign Bed', icon: Bed, onClick: () => setBedModalOpen(true) },
   ];
+  const addPatient = async (Data: Patient) => {
+    await postPatient(Data).unwrap()
+    await refetch()
+    toast({
+      title: 'Doctor Added',
+      description: `${Data.name} has been added successfully.`,
+    });
 
+  };
+  const addAppointment = async (Data: Patient) => {
+    await postPatient(Data).unwrap()
+    await refetch()
+    toast({
+      title: 'Doctor Added',
+      description: `${Data.name} has been added successfully.`,
+    });
+
+  };
   return (
     <>
       <div className="bg-card rounded-xl p-6 shadow-card animate-slide-up">
@@ -42,11 +63,14 @@ export function QuickActions() {
 
       <PatientFormModal
         open={patientModalOpen}
+        onSubmit={addPatient}
         onOpenChange={setPatientModalOpen}
         mode="add"
       />
       <AppointmentFormModal
         open={appointmentModalOpen}
+        patients={patients}
+        doctors={doctors}
         onOpenChange={setAppointmentModalOpen}
         mode="add"
         onSubmit={addAppointment}

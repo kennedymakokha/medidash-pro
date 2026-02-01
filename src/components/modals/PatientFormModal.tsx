@@ -28,12 +28,14 @@ import {
 import { Patient } from '@/types/hospital';
 import { useCreatepatientMutation } from '@/features/patientSlice';
 import { generateUnifiedId } from '@/utils/culculateAge';
+import { useGetusersQuery } from '@/features/userSlice';
+import { Doctor } from '@/data/mockData';
 
 interface PatientFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
-  onSubmit?: (patient: Omit<Patient, 'id'>) => void;
+  onSubmit: (patient: Patient) => void;
   mode: 'add' | 'edit';
   refetch?: () => Promise<void> | void;
 
@@ -65,18 +67,17 @@ export function PatientFormModal({
     address: '',
     bloodgroup: 'A+',
     status: 'outpatient' as Patient['status'],
-    assignedDoctor: undefined,
+    assignedDoctor: '',
     room: '',
     nokName: "",
     nokRelationship: "",
     nokPhone: "",
     nationalId: "",
     admissionDate: ""
-
-
-
   });
-  const [postPatient] = useCreatepatientMutation({})
+  const { data: users } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search: "" })
+  const doctors = users !== undefined ? users?.data : [];
+
   useEffect(() => {
     if (!open) return;
 
@@ -122,18 +123,23 @@ export function PatientFormModal({
     }
   }, [open, patient, mode]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   onSubmit({
+  //     ...formData, admissionDate:
+  //       formData.status === 'admitted' || formData.status === 'critical'
+  //         ? new Date().toISOString().split('T')[0]
+  //         : undefined,
+  //   });
 
-    // onSubmit();
-    let v = await postPatient({
-      ...formData, admissionDate:
-        formData.status === 'admitted' || formData.status === 'critical'
-          ? new Date().toISOString().split('T')[0]
-          : undefined,
-    }).unwrap()
+  //   onOpenChange(false);
+
+  // };
+  const handleSubmit = (e: React.FormEvent) => {
+    console.log(formData)
+    e.preventDefault();
+    onSubmit(formData);
     onOpenChange(false);
-    if (refetch) await refetch();
   };
 
   return (
@@ -320,18 +326,26 @@ export function PatientFormModal({
             </div>
 
             {/* Doctor */}
+
             <div className="col-span-2">
               <Label>Assigned Doctor</Label>
-              <Input
+              <Select
                 value={formData.assignedDoctor}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    assignedDoctor: e.target.value,
-                  })
-                }
-              />
+                onValueChange={(value) => setFormData({ ...formData, assignedDoctor: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((doc: Doctor) => (
+                    <SelectItem key={doc._id} value={doc._id}>
+                      {doc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             {/* Next of Kin */}
             <div className="col-span-2 pt-4 border-t">
               <Label className="text-sm font-semibold text-muted-foreground">

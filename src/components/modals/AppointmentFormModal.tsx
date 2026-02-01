@@ -7,36 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Appointment, Patient } from '@/types/hospital';
 import { useHospitalData } from '@/contexts/HospitalDataContext';
+import { Doctor } from '@/data/mockData';
 
 interface AppointmentFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  patients: Patient[];
+  doctors: Doctor[]
   appointment?: Appointment | null;
   preselectedPatient?: Patient | null;
-  onSubmit: (appointment: Omit<Appointment, 'id'>) => void;
+  onSubmit: (appointment: any) => void;
   mode: 'add' | 'edit';
 }
 
 const appointmentTypes: Appointment['type'][] = ['checkup', 'followup', 'emergency', 'surgery'];
-const doctors = [
-  'Dr. Michael Chen',
-  'Dr. Sarah Lee',
-  'Dr. James Wilson',
-  'Dr. Emily White',
-  'Dr. Robert Brown',
-  'Dr. Lisa Anderson',
-];
 
-export function AppointmentFormModal({ 
-  open, 
-  onOpenChange, 
-  appointment, 
+
+export function AppointmentFormModal({
+  open,
+  onOpenChange,
+  patients,
+  doctors,
+  appointment,
   preselectedPatient,
-  onSubmit, 
-  mode 
+  onSubmit,
+  mode
 }: AppointmentFormModalProps) {
-  const { patients } = useHospitalData();
-  
+
+
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -48,7 +46,7 @@ export function AppointmentFormModal({
     status: 'scheduled' as Appointment['status'],
     notes: '',
   });
-
+  console.log(doctors)
   useEffect(() => {
     if (appointment && mode === 'edit') {
       setFormData({
@@ -90,7 +88,7 @@ export function AppointmentFormModal({
   }, [appointment, preselectedPatient, mode, open]);
 
   const handlePatientChange = (patientId: string) => {
-    const patient = patients.find((p) => p.id === patientId);
+    const patient = patients.find((p) => p.uuid === patientId);
     setFormData({
       ...formData,
       patientId,
@@ -138,7 +136,7 @@ export function AppointmentFormModal({
                 <SelectValue placeholder="Select patient" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((patient) => (
+                {patients?.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     {patient.name}
                   </SelectItem>
@@ -153,9 +151,9 @@ export function AppointmentFormModal({
                 <SelectValue placeholder="Select doctor" />
               </SelectTrigger>
               <SelectContent>
-                {doctors.map((doctor) => (
-                  <SelectItem key={doctor} value={doctor}>
-                    {doctor}
+                {doctors?.map((doctor: any) => (
+                  <SelectItem key={doctor._id} value={doctor._id}>
+                    {doctor.name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -21,7 +21,7 @@ export function ViewDoctorModal({ open, onOpenChange, doctor }: ViewDoctorModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[800px]">
         <DialogHeader>
           <DialogTitle>Doctor Details</DialogTitle>
         </DialogHeader>
@@ -48,7 +48,7 @@ export function ViewDoctorModal({ open, onOpenChange, doctor }: ViewDoctorModalP
               <Phone className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="text-sm font-medium">{doctor.phone}</p>
+                <p className="text-sm font-medium">{doctor.phone_number}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -62,7 +62,7 @@ export function ViewDoctorModal({ open, onOpenChange, doctor }: ViewDoctorModalP
               <Building2 className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Department</p>
-                <p className="text-sm font-medium">{doctor.department}</p>
+                <p className="text-sm font-medium">{doctor?.department?.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">

@@ -14,26 +14,17 @@ export const patientApiSlice = apiSlice.injectEndpoints({
         fetchpatients: builder.query({
             query: ({ page, limit, search }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}`
         }),
-        updatepatient: builder.mutation({
-            query: (data) => ({
-                url: `${USER_URL}/${data._id}`,
-                method: "PUT",
-                body: data
-            })
+        fetchpatientsoverviews: builder.query({
+            query: () => `${USER_URL}/overview`
         }),
-        deletepatient: builder.mutation({
-            query: (id) => ({
-                url: `${USER_URL}/${id}`,
-                method: "DELETE",
-            })
-        })
+
 
     })
 })
 
 export const {
     useCreatepatientMutation,
-    useDeletepatientMutation,
     useFetchpatientsQuery,
-    useUpdatepatientMutation
+    useFetchpatientsoverviewsQuery,
+
 } = patientApiSlice

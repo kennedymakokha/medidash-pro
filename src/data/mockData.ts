@@ -4,6 +4,7 @@ export const mockPatients: Patient[] = [
   {
     id: '1',
     uuid: 'patient-001',
+
     name: 'John Smith',
     dob: '1979-03-15',
     age: 45,
@@ -21,6 +22,7 @@ export const mockPatients: Patient[] = [
   {
     id: '2',
     uuid: 'patient-002',
+
     name: 'Mary Johnson',
     dob: '1992-07-22',
     age: 32,
@@ -36,6 +38,7 @@ export const mockPatients: Patient[] = [
   {
     id: '3',
     uuid: 'patient-003',
+
     name: 'Robert Williams',
     dob: '1957-11-08',
     age: 67,
@@ -53,6 +56,7 @@ export const mockPatients: Patient[] = [
   {
     id: '4',
     uuid: 'patient-004',
+
     name: 'Jennifer Davis',
     dob: '1996-05-30',
     age: 28,
@@ -143,34 +147,38 @@ export const mockAppointments: Appointment[] = [
 ];
 
 export const mockDepartments: Department[] = [
-  { id: '1', name: 'Cardiology', head: 'Dr. Michael Chen', staffCount: 24, patientCount: 45 },
-  { id: '2', name: 'Neurology', head: 'Dr. Sarah Lee', staffCount: 18, patientCount: 32 },
-  { id: '3', name: 'Orthopedics', head: 'Dr. James Wilson', staffCount: 20, patientCount: 38 },
-  { id: '4', name: 'Pediatrics', head: 'Dr. Emily White', staffCount: 22, patientCount: 56 },
-  { id: '5', name: 'Emergency', head: 'Dr. Robert Brown', staffCount: 30, patientCount: 0 },
-  { id: '6', name: 'ICU', head: 'Dr. Lisa Anderson', staffCount: 28, patientCount: 12 },
+  { _id: '1', name: 'Cardiology', head: 'Dr. Michael Chen', staffCount: 24, patientCount: 45 },
+  { _id: '2', name: 'Neurology', head: 'Dr. Sarah Lee', staffCount: 18, patientCount: 32 },
+  { _id: '3', name: 'Orthopedics', head: 'Dr. James Wilson', staffCount: 20, patientCount: 38 },
+  { _id: '4', name: 'Pediatrics', head: 'Dr. Emily White', staffCount: 22, patientCount: 56 },
+  { _id: '5', name: 'Emergency', head: 'Dr. Robert Brown', staffCount: 30, patientCount: 0 },
+  { _id: '6', name: 'ICU', head: 'Dr. Lisa Anderson', staffCount: 28, patientCount: 12 },
 ];
 
 export interface Doctor {
+  _id?: string,
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone_number: string;
   specialty: string;
-  department: string;
+  department: any;
   status: 'active' | 'on-leave' | 'inactive';
   experience: number;
   qualification: string;
   avatar?: string;
   schedule?: string;
+  role?: string
+  uuid: string,
 }
 
 export const mockDoctors: Doctor[] = [
   {
     id: '1',
+    uuid: '',
     name: 'Dr. Michael Chen',
     email: 'michael.chen@hospital.com',
-    phone: '+1 234-567-1001',
+    phone_number: '+1 234-567-1001',
     specialty: 'Cardiologist',
     department: 'Cardiology',
     status: 'active',
@@ -180,9 +188,10 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '2',
+    uuid: '',
     name: 'Dr. Sarah Lee',
     email: 'sarah.lee@hospital.com',
-    phone: '+1 234-567-1002',
+    phone_number: '+1 234-567-1002',
     specialty: 'Neurologist',
     department: 'Neurology',
     status: 'active',
@@ -192,9 +201,10 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '3',
+    uuid: '',
     name: 'Dr. James Wilson',
     email: 'james.wilson@hospital.com',
-    phone: '+1 234-567-1003',
+    phone_number: '+1 234-567-1003',
     specialty: 'Orthopedic Surgeon',
     department: 'Orthopedics',
     status: 'active',
@@ -204,9 +214,10 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '4',
+    uuid: '',
     name: 'Dr. Emily White',
     email: 'emily.white@hospital.com',
-    phone: '+1 234-567-1004',
+    phone_number: '+1 234-567-1004',
     specialty: 'Pediatrician',
     department: 'Pediatrics',
     status: 'on-leave',
@@ -216,9 +227,10 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '5',
+    uuid: '',
     name: 'Dr. Robert Brown',
     email: 'robert.brown@hospital.com',
-    phone: '+1 234-567-1005',
+    phone_number: '+1 234-567-1005',
     specialty: 'Emergency Medicine',
     department: 'Emergency',
     status: 'active',
@@ -228,9 +240,10 @@ export const mockDoctors: Doctor[] = [
   },
   {
     id: '6',
+    uuid: '',
     name: 'Dr. Lisa Anderson',
     email: 'lisa.anderson@hospital.com',
-    phone: '+1 234-567-1006',
+    phone_number: '+1 234-567-1006',
     specialty: 'Intensivist',
     department: 'ICU',
     status: 'active',

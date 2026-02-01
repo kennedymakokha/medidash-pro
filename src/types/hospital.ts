@@ -11,19 +11,18 @@ export interface User {
 
 export interface Patient {
   uuid: string;
-  dob: string;
-  sex: string;
-  id: string;
+  dob: any;
+  id?: string;
   name: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
+  age?: number;
+  sex?: 'male' | 'female' | 'other';
   phone: string;
   email: string;
   address: string;
   bloodgroup: string;
   status: 'admitted' | 'outpatient' | 'discharged' | 'critical';
   admissionDate?: string;
-  assignedDoctor?: string;
+  assignedDoctor?: any;
   room?: string;
   nokName?: string;
   nokRelationship?: string;
@@ -54,11 +53,11 @@ export interface StatsCard {
 }
 
 export interface Department {
-  id: string;
+  _id: string;
   name: string;
-  head: string;
-  staffCount: number;
-  patientCount: number;
+  head?: string;
+  staffCount?: number;
+  patientCount?: number;
 }
 
 

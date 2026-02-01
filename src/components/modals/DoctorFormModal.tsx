@@ -17,9 +17,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Doctor, mockDepartments } from '@/data/mockData';
+import { Department } from '@/types/hospital';
+import { generateUnifiedId } from '@/utils/culculateAge';
 
 interface DoctorFormModalProps {
   open: boolean;
+  departments: Department[]
   onOpenChange: (open: boolean) => void;
   doctor?: Doctor | null;
   onSubmit: (doctor: Omit<Doctor, 'id'>) => void;
@@ -44,20 +47,23 @@ const statusOptions: Doctor['status'][] = ['active', 'on-leave', 'inactive'];
 export function DoctorFormModal({
   open,
   onOpenChange,
+  departments,
   doctor,
   onSubmit,
   mode,
 }: DoctorFormModalProps) {
   const [formData, setFormData] = useState({
+    uuid: generateUnifiedId('doctor'),
     name: '',
     email: '',
-    phone: '',
+    phone_number: '',
     specialty: '',
     department: '',
     status: 'active' as Doctor['status'],
     experience: 0,
     qualification: '',
     schedule: '',
+    role: "",
   });
 
   useEffect(() => {
@@ -65,32 +71,37 @@ export function DoctorFormModal({
 
     if (doctor && mode === 'edit') {
       setFormData({
+        uuid: doctor.uuid,
         name: doctor.name ?? '',
         email: doctor.email ?? '',
-        phone: doctor.phone ?? '',
+        phone_number: doctor.phone_number ?? '',
         specialty: doctor.specialty ?? '',
         department: doctor.department ?? '',
         status: doctor.status ?? 'active',
         experience: doctor.experience ?? 0,
         qualification: doctor.qualification ?? '',
         schedule: doctor.schedule ?? '',
+        role: "doctor",
       });
     } else {
       setFormData({
+        uuid: generateUnifiedId('doctor'),
         name: '',
         email: '',
-        phone: '',
+        phone_number: '',
         specialty: '',
         department: '',
         status: 'active',
         experience: 0,
         qualification: '',
         schedule: '',
+        role: "doctor"
       });
     }
   }, [open, doctor, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
+    console.log(formData)
     e.preventDefault();
     onSubmit(formData);
     onOpenChange(false);
@@ -129,10 +140,10 @@ export function DoctorFormModal({
             </div>
 
             <div>
-              <Label>Phone</Label>
+              <Label>phone</Label>
               <Input
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 placeholder="+1 234-567-8900"
                 required
               />
@@ -167,8 +178,8 @@ export function DoctorFormModal({
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockDepartments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.name}>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept._id} value={dept._id}>
                       {dept.name}
                     </SelectItem>
                   ))}

@@ -16,18 +16,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSelector } from 'react-redux';
-import { useFetchpatientsQuery } from '@/features/patientSlice';
+import { useCreatepatientMutation, useFetchpatientsoverviewsQuery, useFetchpatientsQuery } from '@/features/patientSlice';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Patient } from '@/types/hospital';
+import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
+import { useGetusersoverviewQuery, useGetusersQuery } from '@/features/userSlice';
 
 function UnifiedDashboard() {
   const { userInfo: { user } } = useSelector((state: any) => state.auth)
-  const { patients, appointments, departments, addPatient, addAppointment } = useHospitalData();
+  const { appointments, addAppointment } = useHospitalData();
   const [page, setPage] = useState(1);
   const limit = 5;
   const [search, setSearch] = useState('');
   const role = user?.role;
   const debouncedSearch = useDebounce(search, 400);
   const today = '2024-01-20';
+  const [postPatient] = useCreatepatientMutation({})
+  const { data: depts } = useFetchdepartmentsQuery({})
+  const { data: docs } = useGetusersoverviewQuery({ role: "doctor" })
+
+  const {
+    data: overview
+  } = useFetchpatientsoverviewsQuery({});
 
   const {
     data,
@@ -39,6 +49,10 @@ function UnifiedDashboard() {
     limit,
     search: debouncedSearch,
   });
+
+
+  const patients = overview !== undefined ? overview.patients : []
+
   const [patientModalOpen, setPatientModalOpen] = useState(false);
   const [appointmentModalOpen, setAppointmentModalOpen] = useState(false);
   const [selectedPatientForAppointment, setSelectedPatientForAppointment] = useState(null);
@@ -50,7 +64,7 @@ function UnifiedDashboard() {
   const todayAppointments = appointments.filter(a => a.date === today && a.status !== 'cancelled');
   const criticalPatients = patients.filter(p => p.status === 'critical');
   const admittedPatients = patients.filter(p => p.status === 'admitted' || p.status === 'critical');
-
+  const departments = depts !== undefined ? depts : []
   // Receptionist waiting queue
   const [waitingQueue, setWaitingQueue] = useState([
     { id: 1, name: 'Emily Carter', checkIn: '08:45 AM', doctor: 'Dr. Michael Chen', status: 'waiting' },
@@ -65,7 +79,15 @@ function UnifiedDashboard() {
     const patient = waitingQueue.find(p => p.id === id);
     toast({ title: 'Patient Called', description: `${patient?.name} has been called for consultation.` });
   };
+  const addPatient = async (Data: Patient) => {
+    await postPatient(Data).unwrap()
+    await refetch()
+    toast({
+      title: 'Doctor Added',
+      description: `${Data.name} has been added successfully.`,
+    });
 
+  };
   return (
     <DashboardLayout
       title="Hospital Dashboard"
@@ -144,7 +166,7 @@ function UnifiedDashboard() {
         {/* Quick Actions (Admin only) */}
         {role === 'admin' && (
           <div className="lg:col-span-1">
-            <QuickActions />
+            <QuickActions refetch={refetch} doctors={docs !== undefined ? docs : []} patients={patients} />
           </div>
         )}
       </div>
@@ -155,7 +177,7 @@ function UnifiedDashboard() {
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4">Departments Overview</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {departments.map(dept => <DepartmentCard key={dept.id} department={dept} />)}
+            {departments?.map(dept => <DepartmentCard key={dept._id} department={dept} />)}
           </div>
         </div>
       )}
@@ -211,8 +233,22 @@ function UnifiedDashboard() {
       )}
 
       {/* --- Modals --- */}
-      <PatientFormModal refetch={() => { refetch(); }} open={patientModalOpen} onOpenChange={setPatientModalOpen} mode="add" onSubmit={addPatient} />
-      <AppointmentFormModal open={appointmentModalOpen} onOpenChange={setAppointmentModalOpen} mode="add" preselectedPatient={selectedPatientForAppointment} onSubmit={addAppointment} />
+      <PatientFormModal
+        refetch={() => { refetch(); }}
+        open={patientModalOpen}
+        onOpenChange={setPatientModalOpen}
+        mode="add"
+        onSubmit={addPatient}
+      />
+      <AppointmentFormModal
+        doctors={docs !== undefined ? docs : []}
+        open={appointmentModalOpen}
+        onOpenChange={setAppointmentModalOpen}
+        patients={patients}
+        mode="add"
+        preselectedPatient={selectedPatientForAppointment}
+        onSubmit={addAppointment}
+      />
       <ViewPatientModal open={!!viewPatient} onOpenChange={open => !open && setViewPatient(null)} patient={viewPatient} />
     </DashboardLayout>
   );
