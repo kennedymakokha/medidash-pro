@@ -21,7 +21,7 @@ import { useCreatepatientMutation } from '@/features/patientSlice';
 interface PatientTableProps {
   patients: Patient[];
   title: string;
-  refetch?: () => Promise<void>;
+  refetch?: () => void;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;

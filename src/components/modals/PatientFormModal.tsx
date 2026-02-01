@@ -34,7 +34,8 @@ interface PatientFormModalProps {
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
   onSubmit?: (patient: Omit<Patient, 'id'>) => void;
-  mode: 'add' | 'edit'; refetch: any
+  mode: 'add' | 'edit';
+  refetch?: () => Promise<void> | void;
 
 }
 
@@ -132,9 +133,7 @@ export function PatientFormModal({
           : undefined,
     }).unwrap()
     onOpenChange(false);
-    await refetch()
-
-    onOpenChange(false);
+    if (refetch) await refetch();
   };
 
   return (
