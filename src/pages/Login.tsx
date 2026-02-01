@@ -8,6 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/hospital';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useLoginMutation } from '@/features/userSlice';
+import { setCredentials } from '@/store/authSlice';
+import { useDispatch } from 'react-redux';
 
 const roles: { value: UserRole; label: string; description: string }[] = [
   { value: 'admin', label: 'Administrator', description: 'Full system access' },
@@ -17,11 +20,12 @@ const roles: { value: UserRole; label: string; description: string }[] = [
 ];
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [phone_number, setPhone] = useState('0716017221');
+  const [password, setPassword] = useState('+254716017221');
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [login, isFetching] = useLoginMutation({});
+  const dispatch = useDispatch()
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -30,20 +34,23 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password, selectedRole);
-      if (success) {
+      // const success = await login(email, password, selectedRole);
+
+      const res = await login({ phone_number: phone_number, password: password }).unwrap();
+      dispatch(setCredentials({ ...res }))
+      // if (res) {
         toast({
           title: 'Welcome back!',
           description: `Logged in as ${selectedRole}`,
         });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: 'Login failed',
-          description: 'Invalid credentials. Password must be at least 4 characters.',
-          variant: 'destructive',
-        });
-      }
+      navigate('/dashboard');
+      // } else {
+      //   toast({
+      //     title: 'Login failed',
+      //     description: 'Invalid credentials. Password must be at least 4 characters.',
+      //     variant: 'destructive',
+      //   });
+      // }
     } catch (error) {
       toast({
         title: 'Error',
@@ -60,7 +67,7 @@ export default function Login() {
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-hero p-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        
+
         <div className="relative z-10">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-primary/20 backdrop-blur-sm">
@@ -143,15 +150,15 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="phone_number">Phone Number</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
+                  id="phone_number"
+                  type="numeric"
                   placeholder="you@hospital.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={phone_number}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="pl-11 h-12"
                   required
                 />
@@ -200,9 +207,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground">
-            Demo: Use any email and a password with 4+ characters
-          </p>
+
         </div>
       </div>
     </div>

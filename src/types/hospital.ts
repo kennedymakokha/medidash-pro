@@ -10,6 +10,9 @@ export interface User {
 }
 
 export interface Patient {
+  uuid: string;
+  dob: string;
+  sex: string;
   id: string;
   name: string;
   age: number;
@@ -17,11 +20,16 @@ export interface Patient {
   phone: string;
   email: string;
   address: string;
-  bloodGroup: string;
+  bloodgroup: string;
   status: 'admitted' | 'outpatient' | 'discharged' | 'critical';
   admissionDate?: string;
   assignedDoctor?: string;
   room?: string;
+  nokName?: string;
+  nokRelationship?: string;
+  nokPhone?: string;
+  isDeleted?: boolean
+  nationalId?: string
 }
 
 export interface Appointment {
@@ -52,3 +60,6 @@ export interface Department {
   staffCount: number;
   patientCount: number;
 }
+
+
+

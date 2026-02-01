@@ -1,9 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  UserPlus, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  UserPlus,
   ClipboardList,
   Building2,
   Settings,
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/hospital';
 import { toast } from '@/hooks/use-toast';
+import { useSelector } from 'react-redux';
 
 interface NavItem {
   label: string;
@@ -42,7 +43,8 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { userInfo: { user } } = useSelector((state: any) => state.auth)
+  const { logout } = useAuth();
 
   const filteredNavItems = navItems.filter(
     (item) => user && item.roles.includes(user.role)
@@ -118,15 +120,15 @@ export function Sidebar() {
         <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent mb-3">
           <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center">
             <span className="text-sm font-semibold text-sidebar-primary-foreground">
-              {user?.name.charAt(0)}
+              {user?.clinic?.name.charAt(0)}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name}</p>
+            {/* <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.clinic?.name}</p> */}
             <p className="text-xs text-sidebar-foreground/60 capitalize">{user?.role}</p>
           </div>
         </div>
-        
+
         <div className="flex gap-2">
           <button
             onClick={handleSettingsClick}

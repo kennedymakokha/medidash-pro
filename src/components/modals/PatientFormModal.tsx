@@ -1,116 +1,225 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { format } from 'date-fns';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
 import { Patient } from '@/types/hospital';
+import { useCreatepatientMutation } from '@/features/patientSlice';
+import { generateUnifiedId } from '@/utils/culculateAge';
 
 interface PatientFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
-  onSubmit: (patient: Omit<Patient, 'id'>) => void;
-  mode: 'add' | 'edit';
+  onSubmit?: (patient: Omit<Patient, 'id'>) => void;
+  mode: 'add' | 'edit'; refetch: any
+
 }
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const statusOptions: Patient['status'][] = ['outpatient', 'admitted', 'critical', 'discharged'];
+const statusOptions: Patient['status'][] = [
+  'outpatient',
+  'admitted',
+  'critical',
+  'discharged',
+];
 
-export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }: PatientFormModalProps) {
+export function PatientFormModal({
+  open,
+  onOpenChange,
+  patient,
+  onSubmit,
+  refetch,
+  mode,
+}: PatientFormModalProps) {
   const [formData, setFormData] = useState({
+    uuid: generateUnifiedId('patient'),
     name: '',
-    age: '',
-    gender: 'male' as 'male' | 'female' | 'other',
+    dob: null as Date | null,
+    sex: 'male' as 'male' | 'female' | 'other',
     phone: '',
     email: '',
     address: '',
-    bloodGroup: 'A+',
+    bloodgroup: 'A+',
     status: 'outpatient' as Patient['status'],
-    assignedDoctor: '',
+    assignedDoctor: undefined,
     room: '',
-  });
+    nokName: "",
+    nokRelationship: "",
+    nokPhone: "",
+    nationalId: "",
+    admissionDate: ""
 
+
+
+  });
+  const [postPatient] = useCreatepatientMutation({})
   useEffect(() => {
+    if (!open) return;
+
     if (patient && mode === 'edit') {
       setFormData({
-        name: patient.name,
-        age: patient.age.toString(),
-        gender: patient.gender,
-        phone: patient.phone,
-        email: patient.email,
-        address: patient.address,
-        bloodGroup: patient.bloodGroup,
-        status: patient.status,
-        assignedDoctor: patient.assignedDoctor || '',
-        room: patient.room || '',
+        uuid: patient.uuid,
+        name: patient.name ?? '',
+        dob: patient.dob ? new Date(patient.dob) : null,
+        sex: (patient.sex ?? 'male').toLowerCase() as any,
+        phone: patient.phone ?? '',
+        email: patient.email ?? '',
+        address: patient.address ?? '',
+        bloodgroup: patient.bloodgroup ?? 'A+',
+        status: patient.status ?? 'outpatient',
+        assignedDoctor: patient.assignedDoctor ?? '',
+        room: patient.room ?? '',
+        nokName: patient.nokName ?? '',
+        nokPhone: patient.nokPhone ?? '',
+        nokRelationship: patient.nokRelationship ?? '',
+        nationalId: patient.nationalId ?? '',
+        admissionDate: patient.admissionDate ?? '',
+
       });
     } else {
       setFormData({
+        uuid: generateUnifiedId('patient'),
         name: '',
-        age: '',
-        gender: 'male',
+        dob: null,
+        sex: 'male',
         phone: '',
         email: '',
         address: '',
-        bloodGroup: 'A+',
+        bloodgroup: 'A+',
         status: 'outpatient',
         assignedDoctor: '',
         room: '',
+        nokName: '',
+        nokPhone: '',
+        nokRelationship: '',
+        nationalId: "",
+        admissionDate: ""
       });
     }
-  }, [patient, mode, open]);
+  }, [open, patient, mode]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      name: formData.name,
-      age: parseInt(formData.age) || 0,
-      gender: formData.gender,
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-      bloodGroup: formData.bloodGroup,
-      status: formData.status,
-      assignedDoctor: formData.assignedDoctor || undefined,
-      room: formData.room || undefined,
-      admissionDate: formData.status === 'admitted' || formData.status === 'critical' 
-        ? new Date().toISOString().split('T')[0] 
-        : undefined,
-    });
+
+    // onSubmit();
+    let v = await postPatient({
+      ...formData, admissionDate:
+        formData.status === 'admitted' || formData.status === 'critical'
+          ? new Date().toISOString().split('T')[0]
+          : undefined,
+    }).unwrap()
+    onOpenChange(false);
+    await refetch()
+
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto ">
         <DialogHeader>
-          <DialogTitle>{mode === 'add' ? 'Add New Patient' : 'Edit Patient'}</DialogTitle>
+          <DialogTitle>
+            {mode === 'add' ? 'Add New Patient' : 'Edit Patient'}
+          </DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            {/* Name */}
             <div className="col-span-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label>Full Name</Label>
               <Input
-                id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
+
+            {/* DOB Date Picker */}
             <div>
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                value={formData.age}
-                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                required
-              />
+              <Label>Date of Birth</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    {formData.dob
+                      ? format(formData.dob, 'PPP')
+                      : 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formData.dob ?? undefined}
+                    onSelect={(date) =>
+                      setFormData({ ...formData, dob: date ?? null })
+                    }
+                    captionLayout="dropdown"
+                    fromYear={1900}
+                    toYear={new Date().getFullYear()}
+                    disabled={(date) => date > new Date()}
+                    className="rounded-lg border shadow-sm p-3"
+                    classNames={{
+                      caption: 'flex justify-center gap-2 mb-2',
+                      caption_label: 'hidden',
+                      dropdown:
+                        'px-2 py-1 rounded-md border bg-background text-sm',
+                      nav: 'space-x-1',
+                      nav_button:
+                        'h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground',
+                      table: 'w-full border-collapse space-y-1',
+                      head_cell:
+                        'text-muted-foreground font-medium text-xs',
+                      cell:
+                        'h-9 w-9 text-center text-sm rounded-md hover:bg-accent',
+                      day_selected:
+                        'bg-primary text-primary-foreground hover:bg-primary',
+                      day_today:
+                        'border border-primary text-primary',
+                    }}
+                    initialFocus
+                  />
+
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Gender */}
             <div>
-              <Label htmlFor="gender">Gender</Label>
-              <Select value={formData.gender} onValueChange={(value: 'male' | 'female' | 'other') => setFormData({ ...formData, gender: value })}>
+              <Label>Gender</Label>
+              <Select
+                value={formData.sex}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, sex: value as any })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -121,81 +230,160 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Phone */}
             <div>
-              <Label htmlFor="phone">Phone</Label>
+              <Label>Phone</Label>
               <Input
-                id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 required
               />
             </div>
+
+            {/* Blood Group */}
             <div>
-              <Label htmlFor="bloodGroup">Blood Group</Label>
-              <Select value={formData.bloodGroup} onValueChange={(value) => setFormData({ ...formData, bloodGroup: value })}>
+              <Label>Blood Group</Label>
+              <Select
+                value={formData.bloodgroup}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, bloodgroup: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {bloodGroups.map((bg) => (
-                    <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                    <SelectItem key={bg} value={bg}>
+                      {bg}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-span-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                required
-              />
-            </div>
             <div>
-              <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value: Patient['status']) => setFormData({ ...formData, status: value })}>
+              <Label>Address</Label>
+              <Input
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            {/* Blood Group */}
+            <div>
+              <Label>National ID</Label>
+              <Input
+                value={formData.nationalId}
+                onChange={(e) =>
+                  setFormData({ ...formData, nationalId: e.target.value })
+                } />
+            </div>
+
+            {/* Status */}
+            <div>
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value as Patient['status'] })
+                }
+              >
+
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
+                    <SelectItem key={status} value={status} className="capitalize">
+                      {status}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Room */}
             <div>
-              <Label htmlFor="room">Room (if admitted)</Label>
+              <Label>Room</Label>
               <Input
-                id="room"
                 value={formData.room}
-                onChange={(e) => setFormData({ ...formData, room: e.target.value })}
-                placeholder="e.g., Room 201"
+                onChange={(e) =>
+                  setFormData({ ...formData, room: e.target.value })
+                }
+                placeholder="Room 201"
               />
             </div>
+
+            {/* Doctor */}
             <div className="col-span-2">
-              <Label htmlFor="assignedDoctor">Assigned Doctor</Label>
+              <Label>Assigned Doctor</Label>
               <Input
-                id="assignedDoctor"
                 value={formData.assignedDoctor}
-                onChange={(e) => setFormData({ ...formData, assignedDoctor: e.target.value })}
-                placeholder="e.g., Dr. Michael Chen"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    assignedDoctor: e.target.value,
+                  })
+                }
               />
             </div>
+            {/* Next of Kin */}
+            <div className="col-span-2 pt-4 border-t">
+              <Label className="text-sm font-semibold text-muted-foreground">
+                Next of Kin
+              </Label>
+            </div>
+
+            <div>
+              <Label>Name</Label>
+              <Input
+                value={formData.nokName}
+                onChange={(e) =>
+                  setFormData({ ...formData, nokName: e.target.value })
+                }
+                placeholder="Full name"
+              />
+            </div>
+
+            <div>
+              <Label>Phone</Label>
+              <Input
+                value={formData.nokPhone}
+                onChange={(e) =>
+                  setFormData({ ...formData, nokPhone: e.target.value })
+                }
+                placeholder="+1 234 567 890"
+              />
+            </div>
+
+            <div className="col-span-2">
+              <Label>Relationship</Label>
+              <Input
+                value={formData.nokRelationship}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    nokRelationship: e.target.value,
+                  })
+                }
+                placeholder="Spouse, Brother, Parent"
+              />
+            </div>
+
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit">
