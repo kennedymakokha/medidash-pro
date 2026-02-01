@@ -152,6 +152,8 @@ export function AppointmentList({ appointments, title = "Today's Appointments" }
         onOpenChange={(open) => !open && setEditAppointment(null)}
         appointment={editAppointment}
         mode="edit"
+        patients={[]}
+        doctors={[]}
         onSubmit={handleEditSubmit}
       />
       <DeleteConfirmModal
