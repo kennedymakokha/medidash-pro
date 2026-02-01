@@ -70,7 +70,7 @@ export function ViewPatientModal({ open, onOpenChange, patient }: ViewPatientMod
               <Droplets className="w-4 h-4 text-destructive" />
               <div>
                 <p className="text-xs text-muted-foreground">Blood Group</p>
-                <p className="text-sm font-bold text-destructive">{patient.bloodGroup}</p>
+                <p className="text-sm font-bold text-destructive">{patient.bloodgroup}</p>
               </div>
             </div>
             {patient.assignedDoctor && (

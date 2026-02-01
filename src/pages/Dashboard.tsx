@@ -168,7 +168,7 @@ function UnifiedDashboard() {
           page={page}
           totalPages={data?.pagination?.totalPages ?? 1}
           onPageChange={setPage}
-          refetch={refetch}
+          refetch={() => { refetch(); }}
           patients={role === 'doctor'
             ? data?.data.filter(p => p.assignedDoctor === user?.name) ?? []
             : data?.data ?? []
@@ -211,7 +211,7 @@ function UnifiedDashboard() {
       )}
 
       {/* --- Modals --- */}
-      <PatientFormModal refetch={refetch} open={patientModalOpen} onOpenChange={setPatientModalOpen} mode="add" onSubmit={addPatient} />
+      <PatientFormModal refetch={() => { refetch(); }} open={patientModalOpen} onOpenChange={setPatientModalOpen} mode="add" onSubmit={addPatient} />
       <AppointmentFormModal open={appointmentModalOpen} onOpenChange={setAppointmentModalOpen} mode="add" preselectedPatient={selectedPatientForAppointment} onSubmit={addAppointment} />
       <ViewPatientModal open={!!viewPatient} onOpenChange={open => !open && setViewPatient(null)} patient={viewPatient} />
     </DashboardLayout>

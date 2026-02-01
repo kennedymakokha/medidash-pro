@@ -44,7 +44,6 @@ export function QuickActions() {
         open={patientModalOpen}
         onOpenChange={setPatientModalOpen}
         mode="add"
-        onSubmit={addPatient}
       />
       <AppointmentFormModal
         open={appointmentModalOpen}

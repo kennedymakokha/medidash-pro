@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
   { label: 'Patients', href: '/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
   { label: 'Appointments', href: '/appointments', icon: Calendar, roles: ['admin', 'doctor', 'receptionist'] },
-  { label: 'Doctors', href: '/doctors', icon: Stethoscope, roles: ['admin', 'receptionist'] },
+  { label: 'Doctors', href: '/doctors', icon: Stethoscope, roles: ['admin', 'receptionist'], implemented: true },
   { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'] },
   { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'] },
   { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'] },
