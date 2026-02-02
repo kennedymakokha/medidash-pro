@@ -11,13 +11,15 @@ import {
   Heart,
   Stethoscope,
   Activity,
-  Bed
+  Bed,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/hospital';
 import { toast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
+import { Button } from '@/components/ui/button';
 
 interface NavItem {
   label: string;
@@ -29,18 +31,22 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
-  { label: 'Patients', href: '/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
-  { label: 'Appointments', href: '/appointments', icon: Calendar, roles: ['admin', 'doctor', 'receptionist'] },
+  { label: 'Patients', href: '/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
+  { label: 'Appointments', href: '/appointments', icon: Calendar, roles: ['admin', 'doctor', 'receptionist'], implemented: true },
   { label: 'Doctors', href: '/doctors', icon: Stethoscope, roles: ['admin', 'receptionist'], implemented: true },
-  { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'], },
-  { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'] },
-  { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'] },
+  { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'], implemented: true },
+  { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'], implemented: true },
+  { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'], implemented: true },
   { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['nurse', 'doctor'], implemented: true },
-  { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'] },
-  { label: 'Reports', href: '/reports', icon: ClipboardList, roles: ['admin', 'doctor'] },
+  { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'], implemented: true },
+  { label: 'Reports', href: '/reports', icon: ClipboardList, roles: ['admin', 'doctor'], implemented: true },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo: { user } } = useSelector((state: any) => state.auth)
@@ -57,6 +63,8 @@ export function Sidebar() {
         title: "Coming Soon",
         description: `The ${item.label} page is under development.`,
       });
+    } else {
+      onClose?.();
     }
   };
 
@@ -74,22 +82,34 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-50">
+    <aside className="h-screen w-64 bg-sidebar flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl gradient-primary">
-            <Heart className="w-6 h-6 text-primary-foreground" />
+      <div className="p-4 lg:p-6 border-b border-sidebar-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl gradient-primary">
+              <Heart className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-base lg:text-lg font-bold text-sidebar-foreground">MediCare</h1>
+              <p className="text-[10px] lg:text-xs text-sidebar-foreground/60">Hospital Management</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">MediCare</h1>
-            <p className="text-xs text-sidebar-foreground/60">Hospital Management</p>
-          </div>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={onClose}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 lg:p-4 space-y-1 overflow-y-auto">
         {filteredNavItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -98,7 +118,7 @@ export function Sidebar() {
               to={item.implemented ? item.href : '#'}
               onClick={(e) => handleNavClick(e, item)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-lg text-sm font-medium transition-all duration-200",
                 isActive
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -116,15 +136,17 @@ export function Sidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent mb-3">
-          <div className="w-10 h-10 rounded-full bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sm font-semibold text-sidebar-primary-foreground">
-              {user?.clinic?.name.charAt(0)}
+      <div className="p-3 lg:p-4 border-t border-sidebar-border">
+        <div className="flex items-center gap-3 p-2 lg:p-3 rounded-lg bg-sidebar-accent mb-3">
+          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-sidebar-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-xs lg:text-sm font-semibold text-sidebar-primary-foreground">
+              {user?.clinic?.name?.charAt(0) || user?.name?.charAt(0) || 'U'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            {/* <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.clinic?.name}</p> */}
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.name || 'User'}
+            </p>
             <p className="text-xs text-sidebar-foreground/60 capitalize">{user?.role}</p>
           </div>
         </div>
@@ -132,17 +154,17 @@ export function Sidebar() {
         <div className="flex gap-2">
           <button
             onClick={handleSettingsClick}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-2 lg:px-3 py-2 rounded-lg text-xs lg:text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
           >
             <Settings className="w-4 h-4" />
-            Settings
+            <span className="hidden sm:inline">Settings</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-2 lg:px-3 py-2 rounded-lg text-xs lg:text-sm text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
