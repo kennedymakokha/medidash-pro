@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,83 +53,15 @@ import {
 import { useHospitalData } from '@/contexts/HospitalDataContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useFetchpatientsoverviewsQuery } from '@/features/patientSlice';
+import { generateUnifiedId } from '@/utils/culculateAge';
+import { useCreatevisitMutation, useFetchvisitsQuery } from '@/features/visitsSlice';
+import { DataTable } from '@/components/table/DataTable';
+import { timeSince } from '@/utils/timeslice';
+import { VitalRecord } from '@/types/hospital';
 
-interface VitalRecord {
-  id: string;
-  patientId: string;
-  patientName: string;
-  recordedAt: string;
-  recordedBy: string;
-  temperature: number;
-  bloodPressureSystolic: number;
-  bloodPressureDiastolic: number;
-  heartRate: number;
-  respiratoryRate: number;
-  oxygenSaturation: number;
-  weight?: number;
-  height?: number;
-  notes?: string;
-}
 
-const mockVitals: VitalRecord[] = [
-  {
-    id: '1',
-    patientId: '1',
-    patientName: 'John Smith',
-    recordedAt: '2024-01-20 09:30',
-    recordedBy: 'Nurse Williams',
-    temperature: 98.6,
-    bloodPressureSystolic: 120,
-    bloodPressureDiastolic: 80,
-    heartRate: 72,
-    respiratoryRate: 16,
-    oxygenSaturation: 98,
-    weight: 180,
-    height: 72,
-  },
-  {
-    id: '2',
-    patientId: '3',
-    patientName: 'Robert Williams',
-    recordedAt: '2024-01-20 08:15',
-    recordedBy: 'Nurse Johnson',
-    temperature: 101.2,
-    bloodPressureSystolic: 145,
-    bloodPressureDiastolic: 95,
-    heartRate: 98,
-    respiratoryRate: 22,
-    oxygenSaturation: 92,
-    notes: 'Elevated temperature, monitoring closely',
-  },
-  {
-    id: '3',
-    patientId: '5',
-    patientName: 'David Brown',
-    recordedAt: '2024-01-20 07:45',
-    recordedBy: 'Nurse Williams',
-    temperature: 98.2,
-    bloodPressureSystolic: 118,
-    bloodPressureDiastolic: 76,
-    heartRate: 68,
-    respiratoryRate: 14,
-    oxygenSaturation: 99,
-    weight: 195,
-    height: 70,
-  },
-  {
-    id: '4',
-    patientId: '2',
-    patientName: 'Mary Johnson',
-    recordedAt: '2024-01-19 14:30',
-    recordedBy: 'Nurse Davis',
-    temperature: 99.1,
-    bloodPressureSystolic: 125,
-    bloodPressureDiastolic: 82,
-    heartRate: 78,
-    respiratoryRate: 18,
-    oxygenSaturation: 97,
-  },
-];
+
 
 function getVitalStatus(vital: VitalRecord): 'normal' | 'warning' | 'critical' {
   if (
@@ -160,13 +92,24 @@ const statusStyles = {
 };
 
 export default function VitalsPage() {
-  const { patients } = useHospitalData();
-  const [vitals, setVitals] = useState<VitalRecord[]>(mockVitals);
+
+  const [vitals, setVitals] = useState<VitalRecord[]>();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [editingVital, setEditingVital] = useState<VitalRecord | null>(null);
   const [viewingVital, setViewingVital] = useState<VitalRecord | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 5;
+  const [search, setSearch] = useState('');
+  const [postVital] = useCreatevisitMutation({})
+  const {
+    data: overview
+  } = useFetchpatientsoverviewsQuery({});
+  const patients = overview !== undefined ? overview.patients : []
+  const { data, refetch } = useFetchvisitsQuery({ limit, page, search })
+  const visits = data !== undefined ? data.data : []
+
   const [formData, setFormData] = useState({
     patientId: '',
     temperature: '',
@@ -180,11 +123,6 @@ export default function VitalsPage() {
     notes: '',
   });
 
-  const filteredVitals = vitals.filter(
-    (vital) =>
-      vital.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vital.recordedBy.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const criticalCount = vitals.filter((v) => getVitalStatus(v) === 'critical').length;
   const warningCount = vitals.filter((v) => getVitalStatus(v) === 'warning').length;
@@ -213,23 +151,40 @@ export default function VitalsPage() {
 
   const handleEdit = (vital: VitalRecord) => {
     setEditingVital(vital);
+    const [systolic, diastolic] = vital.bp
+      .split('/')
+      .map(Number);
     setFormData({
+      uuid: vital.uuid,
       patientId: vital.patientId,
       temperature: vital.temperature.toString(),
-      bloodPressureSystolic: vital.bloodPressureSystolic.toString(),
-      bloodPressureDiastolic: vital.bloodPressureDiastolic.toString(),
-      heartRate: vital.heartRate.toString(),
+      bloodPressureSystolic: systolic,
+      bloodPressureDiastolic: diastolic,
+      heartRate: vital.pulse.toString(),
       respiratoryRate: vital.respiratoryRate.toString(),
-      oxygenSaturation: vital.oxygenSaturation.toString(),
+      oxygenSaturation: vital.pulse.toString(),
       weight: vital.weight?.toString() || '',
       height: vital.height?.toString() || '',
       notes: vital.notes || '',
     });
     setIsAddModalOpen(true);
   };
+  let VitalRecord = {
+    uuid: generateUnifiedId('visit'),
 
-  const handleDelete = (id: string) => {
-    setVitals((prev) => prev.filter((v) => v.id !== id));
+    notes: formData.notes,
+    bp: `${formData.bloodPressureDiastolic}/${formData.bloodPressureSystolic}`,
+    temperature: formData.temperature,
+    pulse: "string",
+    respiratoryRate: formData.respiratoryRate,
+    triageCategory: "string",
+    weight: formData.weight,
+    height: formData.height,
+    bmi: `${parseInt(formData.weight) / parseInt(formData.height)}`,
+  }
+  const handleDelete = async (id: string) => {
+    await postVital({ ...VitalRecord, uuid: id, isDeleted: true }).unwrap()
+    await refetch()
     toast({
       title: 'Record Deleted',
       description: 'Vital record has been removed.',
@@ -237,9 +192,11 @@ export default function VitalsPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const patient = patients.find((p) => p.id === formData.patientId);
+    const patient = patients.find((p) => p._id === formData.patientId);
+
+
 
     if (!patient) {
       toast({
@@ -250,31 +207,23 @@ export default function VitalsPage() {
       return;
     }
 
-    const vitalData: VitalRecord = {
-      id: editingVital?.id || `vital-${Date.now()}`,
-      patientId: formData.patientId,
-      patientName: patient.name,
-      recordedAt: editingVital?.recordedAt || new Date().toISOString().replace('T', ' ').slice(0, 16),
-      recordedBy: 'Current User',
-      temperature: parseFloat(formData.temperature),
-      bloodPressureSystolic: parseInt(formData.bloodPressureSystolic),
-      bloodPressureDiastolic: parseInt(formData.bloodPressureDiastolic),
-      heartRate: parseInt(formData.heartRate),
-      respiratoryRate: parseInt(formData.respiratoryRate),
-      oxygenSaturation: parseInt(formData.oxygenSaturation),
-      weight: formData.weight ? parseFloat(formData.weight) : undefined,
-      height: formData.height ? parseFloat(formData.height) : undefined,
-      notes: formData.notes || undefined,
-    };
 
     if (editingVital) {
-      setVitals((prev) => prev.map((v) => (v.id === editingVital.id ? vitalData : v)));
+      await postVital({
+        ...VitalRecord, patientId: patient.uuid,
+        patientMongoose: patient._id,
+      }).unwrap()
+      await refetch()
       toast({
         title: 'Record Updated',
         description: 'Vital record has been updated successfully.',
       });
     } else {
-      setVitals((prev) => [vitalData, ...prev]);
+      await postVital({
+        ...VitalRecord, patientId: patient.uuid,
+        patientMongoose: patient._id,
+      }).unwrap()
+      await refetch()
       toast({
         title: 'Record Added',
         description: 'New vital record has been added.',
@@ -284,6 +233,17 @@ export default function VitalsPage() {
     setIsAddModalOpen(false);
     resetForm();
   };
+
+  const normalizedVisits = visits?.map(v => {
+    const [sys, dia] = v.bp.split('/').map(Number);
+    return {
+      ...v,
+      bloodPressureSystolic: sys,
+      bloodPressureDiastolic: dia,
+    };
+  });
+
+
 
   return (
     <DashboardLayout title="Vitals" subtitle="Monitor and record patient vital signs">
@@ -372,132 +332,127 @@ export default function VitalsPage() {
         </Card>
 
         {/* Vitals Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Vital Records</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Recorded</TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-1">
-                      <Thermometer className="w-4 h-4" />
-                      Temp (°F)
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-1">
-                      <Droplets className="w-4 h-4" />
-                      BP
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
-                      HR
-                    </div>
-                  </TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-1">
-                      <Wind className="w-4 h-4" />
-                      RR
-                    </div>
-                  </TableHead>
-                  <TableHead>SpO2</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVitals.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      No vital records found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredVitals.map((vital) => {
-                    const status = getVitalStatus(vital);
-                    return (
-                      <TableRow key={vital.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{vital.patientName}</p>
-                            <p className="text-xs text-muted-foreground">by {vital.recordedBy}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Clock className="w-3 h-3" />
-                            {vital.recordedAt}
-                          </div>
-                        </TableCell>
-                        <TableCell className={vital.temperature > 100 ? 'text-warning font-medium' : ''}>
-                          {vital.temperature}
-                        </TableCell>
-                        <TableCell
-                          className={
-                            vital.bloodPressureSystolic > 140 || vital.bloodPressureDiastolic > 90
-                              ? 'text-warning font-medium'
-                              : ''
-                          }
-                        >
-                          {vital.bloodPressureSystolic}/{vital.bloodPressureDiastolic}
-                        </TableCell>
-                        <TableCell className={vital.heartRate > 100 ? 'text-warning font-medium' : ''}>
-                          {vital.heartRate}
-                        </TableCell>
-                        <TableCell>{vital.respiratoryRate}</TableCell>
-                        <TableCell className={vital.oxygenSaturation < 95 ? 'text-warning font-medium' : ''}>
-                          {vital.oxygenSaturation}%
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={cn('capitalize', statusStyles[status])}>
-                            {status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setViewingVital(vital);
-                                  setIsViewModalOpen(true);
-                                }}
-                              >
-                                <Eye className="w-4 h-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(vital)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Record
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(vital.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <DataTable
+          title="Vital Records"
+          search={searchQuery}
+          onSearchChange={setSearchQuery}
+          columns={
+            <tr>
+              <th className="px-4 py-3 text-left">Patient</th>
+              <th className="px-4 py-3 text-left">Recorded</th>
+              <th className="px-4 py-3 text-left">Temp (°F)</th>
+              <th className="px-4 py-3 text-left">BP</th>
+              <th className="px-4 py-3 text-left">HR</th>
+              <th className="px-4 py-3 text-left">RR</th>
+              <th className="px-4 py-3 text-left">SpO2</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+          }
+          rows={
+            visits.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="text-center py-8 text-muted-foreground">
+                  No vital records found
+                </td>
+              </tr>
+            ) : (
+              normalizedVisits.map((vital) => {
+                const status = getVitalStatus(vital);
+
+                return (
+                  <tr key={vital.id} className="hover:bg-muted/50">
+                    <td className="px-4 py-3">
+                      <p className="font-medium">{vital?.patientMongoose?.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        by {vital?.created_by?.name}
+                      </p>
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {timeSince(vital.createdAt)}
+                    </td>
+
+                    <td className={cn(
+                      'px-4 py-3',
+                      vital.temperature > 100 && 'text-warning font-medium'
+                    )}>
+                      {vital.temperature}
+                    </td>
+
+                    <td className={cn(
+                      'px-4 py-3',
+                      (vital.bloodPressureSystolic > 140 ||
+                        vital.bloodPressureDiastolic > 90) &&
+                      'text-warning font-medium'
+                    )}>
+                      {vital.bloodPressureSystolic}/{vital.bloodPressureDiastolic}
+                    </td>
+
+                    <td className={cn(
+                      'px-4 py-3',
+                      vital.heartRate > 100 && 'text-warning font-medium'
+                    )}>
+                      {vital.heartRate}
+                    </td>
+
+                    <td className="px-4 py-3">{vital.respiratoryRate}</td>
+
+                    <td className={cn(
+                      'px-4 py-3',
+                      vital.oxygenSaturation < 95 && 'text-warning font-medium'
+                    )}>
+                      {vital.oxygenSaturation}%
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant="outline"
+                        className={cn('capitalize', statusStyles[status])}
+                      >
+                        {status}
+                      </Badge>
+                    </td>
+
+                    <td className="px-4 py-3 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setViewingVital(vital);
+                              setIsViewModalOpen(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(vital)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Record
+                          </DropdownMenuItem>
+                          {/* <DropdownMenuItem
+                            onClick={() => handleDelete(vital.uuid)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem> */}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })
+            )
+          }
+        />
+
+
       </div>
 
       {/* Add/Edit Modal */}
@@ -514,8 +469,8 @@ export default function VitalsPage() {
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id || ''}>
+                  {patients?.map((patient) => (
+                    <SelectItem key={patient._id} value={patient._id}>
                       {patient.name}
                     </SelectItem>
                   ))}

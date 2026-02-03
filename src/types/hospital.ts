@@ -14,6 +14,7 @@ export interface Patient {
   dob: any;
   id?: string;
   name: string;
+  visits: any[]
   age?: number;
   sex?: 'male' | 'female' | 'other';
   phone: string;
@@ -44,6 +45,19 @@ export interface Appointment {
   notes?: string;
 }
 
+export interface Staff {
+  _id: string;
+  uuid:string,
+  name: string;
+  email: string;
+  phone: string;
+  role: 'nurse' | 'receptionist' | 'technician' | 'admin';
+  department: any;
+  status: 'active' | 'on-leave' | 'inactive';
+  joinDate: string;
+}
+
+
 export interface StatsCard {
   title: string;
   value: string | number;
@@ -61,4 +75,20 @@ export interface Department {
 }
 
 
-
+export interface VitalRecord {
+  id: string;
+  uuid?: string,
+  patientId: string;
+  patientName: string;
+  recordedAt: string;
+  recordedBy: string;
+  temperature: number;
+  bloodPressureSystolic: number;
+  bloodPressureDiastolic: number;
+  heartRate: number;
+  respiratoryRate: number;
+  oxygenSaturation: number;
+  weight?: number;
+  height?: number;
+  notes?: string;
+}

@@ -28,47 +28,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Search,
   Plus,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   Users,
   UserCheck,
   Filter,
-  Phone,
-  Mail,
-  Building2,
 } from 'lucide-react';
+import { useGetusersQuery, usePostuserMutation } from '@/features/userSlice';
+import { useDebounce } from '@/hooks/use-debounce';
+import { StaffTable } from '@/components/dashboard/StaffTable';
+import { generateUnifiedId } from '@/utils/culculateAge';
 
 interface Staff {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone_number: string;
   role: 'nurse' | 'receptionist' | 'technician' | 'admin';
   department: string;
   status: 'active' | 'on-leave' | 'inactive';
   joinDate: string;
 }
 
-const mockStaff: Staff[] = [
-  { id: '1', name: 'Jane Wilson', email: 'jane.wilson@hospital.com', phone: '+1 234-567-2001', role: 'nurse', department: 'Emergency', status: 'active', joinDate: '2022-03-15' },
-  { id: '2', name: 'Tom Harris', email: 'tom.harris@hospital.com', phone: '+1 234-567-2002', role: 'receptionist', department: 'Front Desk', status: 'active', joinDate: '2023-01-10' },
-  { id: '3', name: 'Alice Brown', email: 'alice.brown@hospital.com', phone: '+1 234-567-2003', role: 'nurse', department: 'ICU', status: 'active', joinDate: '2021-07-22' },
-  { id: '4', name: 'Bob Martinez', email: 'bob.martinez@hospital.com', phone: '+1 234-567-2004', role: 'technician', department: 'Radiology', status: 'on-leave', joinDate: '2022-09-05' },
-  { id: '5', name: 'Carol Davis', email: 'carol.davis@hospital.com', phone: '+1 234-567-2005', role: 'admin', department: 'Administration', status: 'active', joinDate: '2020-11-18' },
-  { id: '6', name: 'David Lee', email: 'david.lee@hospital.com', phone: '+1 234-567-2006', role: 'nurse', department: 'Pediatrics', status: 'active', joinDate: '2023-04-30' },
-];
 
 const statusStyles = {
   active: 'bg-success/10 text-success border-success/20',
@@ -84,8 +65,18 @@ const roleColors = {
 };
 
 export default function StaffPage() {
-  const [staff, setStaff] = useState<Staff[]>(mockStaff);
+
+
+
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 5;
+  const debouncedSearch = useDebounce(search, 400);
+  const { data: users, refetch } = useGetusersQuery({ role: "", limit, page, search: debouncedSearch })
+  const [staff, setStaff] = useState<Staff[]>([]);
+
+  const staffmembers = users !== undefined ? users.data : []
+
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editStaff, setEditStaff] = useState<Staff | null>(null);
@@ -95,37 +86,44 @@ export default function StaffPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    phone_number: '',
     role: 'nurse' as Staff['role'],
-    department: '',
+    department: null,
     status: 'active' as Staff['status'],
   });
 
-  const filteredStaff = staff.filter((s) => {
-    const matchesSearch =
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase()) ||
-      s.department.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = roleFilter === 'all' || s.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
 
-  const handleSubmit = () => {
+  const [postDoctor] = usePostuserMutation({})
+
+  const handleSubmit = async () => {
     if (editStaff) {
-      setStaff(staff.map((s) => (s.id === editStaff.id ? { ...s, ...formData } : s)));
+      await postDoctor(formData).unwrap()
+      await refetch()
       toast({ title: 'Staff Updated', description: 'Staff member information has been updated.' });
       setEditStaff(null);
-    } else {
-      const newStaff: Staff = {
-        ...formData,
-        id: Date.now().toString(),
-        joinDate: new Date().toISOString().split('T')[0],
-      };
-      setStaff([newStaff, ...staff]);
+    }
+    else {
+      await postDoctor({ ...formData, uuid: generateUnifiedId(`${formData.role}`) }).unwrap()
+      await refetch()
       toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
       setAddModalOpen(false);
     }
-    setFormData({ name: '', email: '', phone: '', role: 'nurse', department: '', status: 'active' });
+    // if (edit1Staff) {
+    //   await postDoctor(doctorData).unwrap()
+    //   await refetch()
+    //   toast({ title: 'Staff Updated', description: 'Staff member information has been updated.' });
+    //   setEditStaff(null);
+    // } else {
+    //   const newStaff: Staff = {
+    //     ...formData,
+    //     id: Date.now().toString(),
+    //     joinDate: new Date().toISOString().split('T')[0],
+    //   };
+    //   setStaff([newStaff, ...staff]);
+    //   toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
+    //   setAddModalOpen(false);
+    // }
+    setFormData({ name: '', email: '', phone_number: '', role: 'nurse', department: null, status: 'active' });
   };
 
   const handleDelete = () => {
@@ -139,7 +137,7 @@ export default function StaffPage() {
     setFormData({
       name: s.name,
       email: s.email,
-      phone: s.phone,
+      phone_number: s.phone_number,
       role: s.role,
       department: s.department,
       status: s.status,
@@ -148,10 +146,10 @@ export default function StaffPage() {
   };
 
   const stats = {
-    total: staff.length,
-    active: staff.filter((s) => s.status === 'active').length,
-    nurses: staff.filter((s) => s.role === 'nurse').length,
-    onLeave: staff.filter((s) => s.status === 'on-leave').length,
+    total: staffmembers.length,
+    active: staffmembers.filter((s) => s.status === 'active').length,
+    nurses: staffmembers.filter((s) => s.role === 'nurse').length,
+    onLeave: staffmembers.filter((s) => s.status === 'on-leave').length,
   };
 
   const isFormOpen = addModalOpen || !!editStaff;
@@ -240,99 +238,23 @@ export default function StaffPage() {
         </div>
       </div>
 
-      {/* Staff Table */}
-      <div className="bg-card rounded-xl shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Staff Member</TableHead>
-                <TableHead className="hidden md:table-cell">Contact</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="hidden lg:table-cell">Department</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStaff.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-primary">
-                          {member.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-card-foreground truncate">{member.name}</p>
-                        <p className="text-sm text-muted-foreground md:hidden">{member.phone}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Phone className="w-3 h-3" />
-                      {member.phone}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Mail className="w-3 h-3" />
-                      <span className="truncate max-w-[180px]">{member.email}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={cn('capitalize', roleColors[member.role])}>
-                      {member.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Building2 className="w-3 h-3" />
-                      {member.department}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn('capitalize', statusStyles[member.status])}>
-                      {member.status.replace('-', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setViewStaff(member)}>
-                          <Eye className="w-4 h-4 mr-2" /> View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEditModal(member)}>
-                          <Edit className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeleteStaff(member)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
 
-        {filteredStaff.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No staff found</h3>
-            <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
-          </div>
-        )}
-      </div>
+      <StaffTable
+        staff={staffmembers} title="Staff table"
+        search={search}
+        statusStyles={statusStyles}
+        onSearchChange={(value) => {
+          setPage(1);
+          setSearch(value);
+        }}
+        setViewStaff={setViewStaff}
+        setEditStaff={openEditModal}
+        setDeleteStaff={setDeleteStaff}
+        page={page}
+        totalPages={users !== undefined ? users.pagination?.totalPages : 1}
+        onPageChange={setPage}
+
+      />
 
       {/* Add/Edit Modal */}
       <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) { setAddModalOpen(false); setEditStaff(null); } }}>
@@ -360,11 +282,11 @@ export default function StaffPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>phone_number</Label>
                 <Input
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Phone number"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  placeholder="phone_number number"
                 />
               </div>
             </div>
@@ -396,7 +318,7 @@ export default function StaffPage() {
             <div className="space-y-2">
               <Label>Department</Label>
               <Input
-                value={formData.department}
+                value={formData?.department?._id}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 placeholder="Enter department"
               />
@@ -436,17 +358,17 @@ export default function StaffPage() {
                   <p className="font-medium">{viewStaff.email}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Phone</p>
-                  <p className="font-medium">{viewStaff.phone}</p>
+                  <p className="text-muted-foreground">phone_number</p>
+                  <p className="font-medium">{viewStaff.phone_number}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Department</p>
-                  <p className="font-medium">{viewStaff.department}</p>
+                  <p className="font-medium">{viewStaff?.department?.name}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
                   <Badge variant="outline" className={cn('capitalize', statusStyles[viewStaff.status])}>
-                    {viewStaff.status.replace('-', ' ')}
+                    {viewStaff?.status?.replace('-', ' ')}
                   </Badge>
                 </div>
                 <div>
