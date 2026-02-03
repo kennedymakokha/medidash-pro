@@ -13,6 +13,8 @@ import {
   Activity,
   Bed,
   X,
+  TestTube,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,9 +35,11 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
   { label: 'Patients', href: '/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'], implemented: true },
   { label: 'Appointments', href: '/appointments', icon: Calendar, roles: ['admin', 'doctor', 'receptionist'], implemented: true },
+  { label: 'Consultations', href: '/consultations', icon: FileText, roles: ['admin', 'doctor'], implemented: true },
   { label: 'Doctors', href: '/doctors', icon: Stethoscope, roles: ['admin', 'receptionist'], implemented: true },
   { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'], implemented: true },
   { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'], implemented: true },
+  { label: 'Lab Tests', href: '/lab-tests', icon: TestTube, roles: ['admin', 'doctor', 'nurse'], implemented: true },
   { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'], implemented: true },
   { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['nurse', 'doctor'], implemented: true },
   { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'], implemented: true },
