@@ -43,9 +43,9 @@ interface Staff {
   id: string;
   name: string;
   email: string;
-  phone_number: string;
+  phone: string;
   role: 'nurse' | 'receptionist' | 'technician' | 'admin';
-  department: string;
+  department: any;
   status: 'active' | 'on-leave' | 'inactive';
   joinDate: string;
 }
@@ -86,9 +86,9 @@ export default function StaffPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone_number: '',
+    phone: '',
     role: 'nurse' as Staff['role'],
-    department: null,
+    department: null as any,
     status: 'active' as Staff['status'],
   });
 
@@ -123,7 +123,7 @@ export default function StaffPage() {
     //   toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
     //   setAddModalOpen(false);
     // }
-    setFormData({ name: '', email: '', phone_number: '', role: 'nurse', department: null, status: 'active' });
+    setFormData({ name: '', email: '', phone: '', role: 'nurse', department: null, status: 'active' });
   };
 
   const handleDelete = () => {
@@ -137,7 +137,7 @@ export default function StaffPage() {
     setFormData({
       name: s.name,
       email: s.email,
-      phone_number: s.phone_number,
+      phone: s.phone,
       role: s.role,
       department: s.department,
       status: s.status,
@@ -282,11 +282,11 @@ export default function StaffPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>phone_number</Label>
+                <Label>Phone</Label>
                 <Input
-                  value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                  placeholder="phone_number number"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Phone number"
                 />
               </div>
             </div>
@@ -318,7 +318,7 @@ export default function StaffPage() {
             <div className="space-y-2">
               <Label>Department</Label>
               <Input
-                value={formData?.department?._id}
+                value={formData?.department?._id || formData?.department || ''}
                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                 placeholder="Enter department"
               />
@@ -358,8 +358,8 @@ export default function StaffPage() {
                   <p className="font-medium">{viewStaff.email}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">phone_number</p>
-                  <p className="font-medium">{viewStaff.phone_number}</p>
+                  <p className="text-muted-foreground">Phone</p>
+                  <p className="font-medium">{viewStaff.phone}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Department</p>

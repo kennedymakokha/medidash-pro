@@ -19,6 +19,9 @@ import StaffPage from "./pages/Staff";
 import BedsPage from "./pages/Beds";
 import ReportsPage from "./pages/Reports";
 import PatientCarePage from "./pages/PatientCare";
+import ConsultationsPage from "./pages/Consultations";
+import LabTestsPage from "./pages/LabTests";
+import { ChatWidget } from "./components/chat/ChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -43,9 +46,12 @@ const App = () => (
                 <Route path="/vitals" element={<Vitals />} />
                 <Route path="/beds" element={<BedsPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/consultations" element={<ConsultationsPage />} />
+                <Route path="/lab-tests" element={<LabTestsPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <ChatWidget />
             </BrowserRouter>
           </TooltipProvider>
         </HospitalDataProvider>

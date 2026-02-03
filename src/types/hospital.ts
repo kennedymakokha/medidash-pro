@@ -72,6 +72,7 @@ export interface Department {
   head?: string;
   staffCount?: number;
   patientCount?: number;
+  consultationFee?: number;
 }
 
 

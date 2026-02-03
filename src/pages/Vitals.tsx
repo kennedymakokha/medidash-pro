@@ -93,7 +93,7 @@ const statusStyles = {
 
 export default function VitalsPage() {
 
-  const [vitals, setVitals] = useState<VitalRecord[]>();
+  const [vitals, setVitals] = useState<VitalRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -124,9 +124,9 @@ export default function VitalsPage() {
   });
 
 
-  const criticalCount = vitals.filter((v) => getVitalStatus(v) === 'critical').length;
-  const warningCount = vitals.filter((v) => getVitalStatus(v) === 'warning').length;
-  const normalCount = vitals.filter((v) => getVitalStatus(v) === 'normal').length;
+  const criticalCount = vitals?.filter((v) => getVitalStatus(v) === 'critical').length || 0;
+  const warningCount = vitals?.filter((v) => getVitalStatus(v) === 'warning').length || 0;
+  const normalCount = vitals?.filter((v) => getVitalStatus(v) === 'normal').length || 0;
 
   const resetForm = () => {
     setFormData({
@@ -151,18 +151,14 @@ export default function VitalsPage() {
 
   const handleEdit = (vital: VitalRecord) => {
     setEditingVital(vital);
-    const [systolic, diastolic] = vital.bp
-      .split('/')
-      .map(Number);
     setFormData({
-      uuid: vital.uuid,
       patientId: vital.patientId,
       temperature: vital.temperature.toString(),
-      bloodPressureSystolic: systolic,
-      bloodPressureDiastolic: diastolic,
-      heartRate: vital.pulse.toString(),
+      bloodPressureSystolic: vital.bloodPressureSystolic.toString(),
+      bloodPressureDiastolic: vital.bloodPressureDiastolic.toString(),
+      heartRate: vital.heartRate.toString(),
       respiratoryRate: vital.respiratoryRate.toString(),
-      oxygenSaturation: vital.pulse.toString(),
+      oxygenSaturation: vital.oxygenSaturation.toString(),
       weight: vital.weight?.toString() || '',
       height: vital.height?.toString() || '',
       notes: vital.notes || '',

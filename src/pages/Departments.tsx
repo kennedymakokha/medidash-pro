@@ -34,6 +34,7 @@ import {
   Users,
   UserCheck,
   Stethoscope,
+  DollarSign,
 } from 'lucide-react';
 
 export default function DepartmentsPage() {
@@ -49,6 +50,7 @@ export default function DepartmentsPage() {
     head: '',
     staffCount: 0,
     patientCount: 0,
+    consultationFee: 0,
   });
 
   const filteredDepartments = departments.filter((dept) =>
@@ -70,7 +72,7 @@ export default function DepartmentsPage() {
       toast({ title: 'Department Added', description: `${formData.name} has been added successfully.` });
       setAddModalOpen(false);
     }
-    setFormData({ name: '', head: '', staffCount: 0, patientCount: 0 });
+    setFormData({ name: '', head: '', staffCount: 0, patientCount: 0, consultationFee: 0 });
   };
 
   const handleDelete = () => {
@@ -86,6 +88,7 @@ export default function DepartmentsPage() {
       head: dept.head || '',
       staffCount: dept.staffCount || 0,
       patientCount: dept.patientCount || 0,
+      consultationFee: dept.consultationFee || 0,
     });
     setEditDept(dept);
   };
@@ -151,12 +154,14 @@ export default function DepartmentsPage() {
         </div>
         <div className="bg-card rounded-xl p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10">
-              <Stethoscope className="w-5 h-5 text-warning" />
+            <div className="p-2 rounded-lg bg-info/10">
+              <DollarSign className="w-5 h-5 text-info" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Avg Staff/Dept</p>
-              <p className="text-2xl font-bold text-warning">{Math.round(totalStaff / departments.length)}</p>
+              <p className="text-sm text-muted-foreground">Avg. Consultation</p>
+              <p className="text-2xl font-bold text-info">
+                ${Math.round(departments.reduce((acc, d) => acc + (d.consultationFee || 0), 0) / departments.length)}
+              </p>
             </div>
           </div>
         </div>
@@ -216,6 +221,13 @@ export default function DepartmentsPage() {
                   {dept.patientCount} Patients
                 </Badge>
               </div>
+              {dept.consultationFee && (
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign className="w-4 h-4 text-info" />
+                  <span className="font-semibold text-info">${dept.consultationFee}</span>
+                  <span className="text-muted-foreground">consultation fee</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -270,6 +282,15 @@ export default function DepartmentsPage() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Consultation Fee ($)</Label>
+              <Input
+                type="number"
+                value={formData.consultationFee}
+                onChange={(e) => setFormData({ ...formData, consultationFee: parseFloat(e.target.value) || 0 })}
+                placeholder="Enter consultation fee"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setAddModalOpen(false); setEditDept(null); }}>
@@ -311,6 +332,14 @@ export default function DepartmentsPage() {
                   <p className="text-muted-foreground">Current Patients</p>
                 </div>
               </div>
+              {viewDept.consultationFee && (
+                <div className="bg-primary/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Consultation Fee</span>
+                    <span className="text-2xl font-bold text-primary">${viewDept.consultationFee}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

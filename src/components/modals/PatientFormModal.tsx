@@ -138,7 +138,7 @@ export function PatientFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     console.log(formData)
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({ ...formData, visits: [] } as Patient);
     onOpenChange(false);
   };
 

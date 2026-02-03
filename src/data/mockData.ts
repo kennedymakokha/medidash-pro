@@ -4,7 +4,6 @@ export const mockPatients: Patient[] = [
   {
     id: '1',
     uuid: 'patient-001',
-
     name: 'John Smith',
     dob: '1979-03-15',
     age: 45,
@@ -17,11 +16,11 @@ export const mockPatients: Patient[] = [
     admissionDate: '2024-01-15',
     assignedDoctor: 'Dr. Michael Chen',
     room: 'Room 201',
+    visits: [],
   },
   {
     id: '2',
     uuid: 'patient-002',
-
     name: 'Mary Johnson',
     dob: '1992-07-22',
     age: 32,
@@ -32,11 +31,11 @@ export const mockPatients: Patient[] = [
     bloodgroup: 'B-',
     status: 'outpatient',
     assignedDoctor: 'Dr. Sarah Lee',
+    visits: [],
   },
   {
     id: '3',
     uuid: 'patient-003',
-
     name: 'Robert Williams',
     dob: '1957-11-08',
     age: 67,
@@ -49,11 +48,11 @@ export const mockPatients: Patient[] = [
     admissionDate: '2024-01-10',
     assignedDoctor: 'Dr. Michael Chen',
     room: 'ICU-3',
+    visits: [],
   },
   {
     id: '4',
     uuid: 'patient-004',
-
     name: 'Jennifer Davis',
     dob: '1996-05-30',
     age: 28,
@@ -64,6 +63,7 @@ export const mockPatients: Patient[] = [
     bloodgroup: 'AB+',
     status: 'discharged',
     assignedDoctor: 'Dr. Emily White',
+    visits: [],
   },
   {
     id: '5',
@@ -80,6 +80,7 @@ export const mockPatients: Patient[] = [
     admissionDate: '2024-01-18',
     assignedDoctor: 'Dr. Michael Chen',
     room: 'Room 305',
+    visits: [],
   },
 ];
 
@@ -142,12 +143,12 @@ export const mockAppointments: Appointment[] = [
 ];
 
 export const mockDepartments: Department[] = [
-  { _id: '1', name: 'Cardiology', head: 'Dr. Michael Chen', staffCount: 24, patientCount: 45 },
-  { _id: '2', name: 'Neurology', head: 'Dr. Sarah Lee', staffCount: 18, patientCount: 32 },
-  { _id: '3', name: 'Orthopedics', head: 'Dr. James Wilson', staffCount: 20, patientCount: 38 },
-  { _id: '4', name: 'Pediatrics', head: 'Dr. Emily White', staffCount: 22, patientCount: 56 },
-  { _id: '5', name: 'Emergency', head: 'Dr. Robert Brown', staffCount: 30, patientCount: 0 },
-  { _id: '6', name: 'ICU', head: 'Dr. Lisa Anderson', staffCount: 28, patientCount: 12 },
+  { _id: '1', name: 'Cardiology', head: 'Dr. Michael Chen', staffCount: 24, patientCount: 45, consultationFee: 150 },
+  { _id: '2', name: 'Neurology', head: 'Dr. Sarah Lee', staffCount: 18, patientCount: 32, consultationFee: 200 },
+  { _id: '3', name: 'Orthopedics', head: 'Dr. James Wilson', staffCount: 20, patientCount: 38, consultationFee: 175 },
+  { _id: '4', name: 'Pediatrics', head: 'Dr. Emily White', staffCount: 22, patientCount: 56, consultationFee: 100 },
+  { _id: '5', name: 'Emergency', head: 'Dr. Robert Brown', staffCount: 30, patientCount: 0, consultationFee: 250 },
+  { _id: '6', name: 'ICU', head: 'Dr. Lisa Anderson', staffCount: 28, patientCount: 12, consultationFee: 300 },
 ];
 
 export interface Doctor {
