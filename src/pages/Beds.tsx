@@ -42,6 +42,7 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react';
+import { useCreatebedMutation, useFetchbedsQuery } from '@/features/bedSlice';
 
 interface BedData {
   id: string;
@@ -87,7 +88,8 @@ export default function BedsPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editBed, setEditBed] = useState<BedData | null>(null);
   const [deleteBed, setDeleteBed] = useState<BedData | null>(null);
-
+  const [postBed] = useCreatebedMutation({})
+  const { data } = useFetchbedsQuery({})
   const [formData, setFormData] = useState({
     bedNumber: '',
     ward: '',
