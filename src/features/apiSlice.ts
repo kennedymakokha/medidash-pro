@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 // export const bURl = "https://rent-space.onrender.com/"
-export const bURl = "http://localhost:3000/"
+export const bURl = "https://d33f-41-139-236-221.ngrok-free.app/"
 // const baseQuery = fetchBaseQuery({ baseUrl: "" })
 const getAuth = async () => {
     try {
