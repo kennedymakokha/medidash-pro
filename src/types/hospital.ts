@@ -11,10 +11,10 @@ export interface User {
 
 export interface Patient {
   uuid: string;
-  dob: any;
+  dob: Date;
   id?: string;
   name: string;
-  visits: any[]
+  visits: Visit[]
   age?: number;
   sex?: 'male' | 'female' | 'other';
   phone: string;
@@ -23,7 +23,7 @@ export interface Patient {
   bloodgroup: string;
   status: 'admitted' | 'outpatient' | 'discharged' | 'critical';
   admissionDate?: string;
-  assignedDoctor?: any;
+  assignedDoctor?: string;
   room?: string;
   nokName?: string;
   nokRelationship?: string;
@@ -32,6 +32,20 @@ export interface Patient {
   nationalId?: string
 }
 
+export interface Visit {
+  _id: string;
+  visitDate: string | null;
+  createdAt: string;
+  bp?: string;
+  pulse?: string;
+  temperature?: string;
+  respiratoryRate?: string;
+  notes?: string;
+  diagnosis?: string;
+  disposition?: string;
+  created_by?: { name: string };
+  labOrders?: string;
+}
 export interface Appointment {
   id: string;
   patientId: string;
@@ -47,12 +61,12 @@ export interface Appointment {
 
 export interface Staff {
   _id: string;
-  uuid:string,
+  uuid: string,
   name: string;
   email: string;
   phone: string;
   role: 'nurse' | 'receptionist' | 'technician' | 'admin';
-  department: any;
+  department: string;
   status: 'active' | 'on-leave' | 'inactive';
   joinDate: string;
 }
@@ -92,4 +106,23 @@ export interface VitalRecord {
   weight?: number;
   height?: number;
   notes?: string;
+}
+
+
+export interface BedData {
+  id?: string;
+  bedNumber?:string
+  uuid: string;
+  ward: string;
+  status?: 'available' | 'occupied' | 'maintenance' | 'reserved';
+  
+}
+export interface WardData {
+  _id?: string;
+  wardName: string;
+  uuid?: string;
+  type: 'general' | 'icu' | 'private' | 'semi-private';
+  gender: 'female' | 'male';
+  status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+
 }

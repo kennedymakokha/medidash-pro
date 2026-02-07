@@ -5,21 +5,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "../ui/badge";
+import { Visit } from "@/types/hospital";
 
-interface Visit {
-  _id: string;
-  visitDate: string | null;
-  createdAt: string;
-  bp?: string;
-  pulse?: string;
-  temperature?: string;
-  respiratoryRate?: string;
-  notes?: string;
-  diagnosis?: string;
-  disposition?: string;
-  created_by?: { name: string };
-  labOrders?: string;
-}
+
 function VisitsAccordion({ visits }: { visits: Visit[] }) {
   if (!visits?.length) {
     return (

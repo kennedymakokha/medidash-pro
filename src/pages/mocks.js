@@ -163,3 +163,29 @@ const mockProcedures = [
     status: "active",
   },
 ];
+
+export const mockBeds = [
+  { id: '1', bedNumber: 'G-101', ward: 'General Ward A', type: 'general', status: 'occupied', patientName: 'John Smith', admissionDate: '2024-01-15' },
+  { id: '2', bedNumber: 'G-102', ward: 'General Ward A', type: 'general', status: 'available' },
+  { id: '3', bedNumber: 'G-103', ward: 'General Ward A', type: 'general', status: 'available' },
+  { id: '4', bedNumber: 'ICU-01', ward: 'ICU', type: 'icu', status: 'occupied', patientName: 'Robert Williams', admissionDate: '2024-01-10' },
+  { id: '5', bedNumber: 'ICU-02', ward: 'ICU', type: 'icu', status: 'reserved' },
+  { id: '6', bedNumber: 'ICU-03', ward: 'ICU', type: 'icu', status: 'available' },
+  { id: '7', bedNumber: 'P-201', ward: 'Private Wing', type: 'private', status: 'occupied', patientName: 'David Brown', admissionDate: '2024-01-18' },
+  { id: '8', bedNumber: 'P-202', ward: 'Private Wing', type: 'private', status: 'maintenance' },
+  { id: '9', bedNumber: 'SP-301', ward: 'Semi-Private', type: 'semi-private', status: 'available' },
+  { id: '10', bedNumber: 'SP-302', ward: 'Semi-Private', type: 'semi-private', status: 'occupied', patientName: 'Mary Johnson', admissionDate: '2024-01-12' },
+];
+
+
+  export const MockWardsData = [
+    { _id: "1", wardName: "General Ward A", gender: "male",type:"general" },
+    { _id: "2", wardName: "General Ward B", gender: "female",type:"general" },
+    { _id: "3", wardName: "General Ward C", gender: "male",type:"general" },
+    { _id: "4", wardName: "Private Ward A", gender: "female",type:"private" },
+    { _id: "5", wardName: "Private Ward B", gender: "male",type:"private" },
+    { _id: "6", wardName: "Private Ward C", gender: "male",type:"private" },
+    { _id: "7", wardName: "Semi Private Ward A", gender: "female",type:"semi-private" },
+    { _id: "8", wardName: "ICU Ward A", gender: "male",type:"icu" },
+    { _id: "10", wardName: "HDU Ward A", gender: "male",type:"hdu" },
+  ];
