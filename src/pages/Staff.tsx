@@ -38,6 +38,7 @@ import { useGetusersQuery, usePostuserMutation } from '@/features/userSlice';
 import { useDebounce } from '@/hooks/use-debounce';
 import { StaffTable } from '@/components/dashboard/StaffTable';
 import { generateUnifiedId } from '@/utils/culculateAge';
+import { StatsGridSkeleton, TableSkeleton } from '@/components/loaders';
 
 interface Staff {
   id: string;
@@ -72,7 +73,7 @@ export default function StaffPage() {
   const [page, setPage] = useState(1);
   const limit = 5;
   const debouncedSearch = useDebounce(search, 400);
-  const { data: users, refetch } = useGetusersQuery({ role: "", limit, page, search: debouncedSearch })
+  const { data: users, refetch, isLoading } = useGetusersQuery({ role: "", limit, page, search: debouncedSearch })
   const [staff, setStaff] = useState<Staff[]>([]);
 
   const staffmembers = users !== undefined ? users.data : []
@@ -191,70 +192,76 @@ export default function StaffPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Users className="w-5 h-5 text-primary" />
+      {isLoading ? (
+        <StatsGridSkeleton count={4} />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Staff</p>
+                <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Staff</p>
-              <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-success/10">
+                <UserCheck className="w-5 h-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-2xl font-bold text-success">{stats.active}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Nurses</p>
+                <p className="text-2xl font-bold text-primary">{stats.nurses}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-warning/10">
+                <Users className="w-5 h-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">On Leave</p>
+                <p className="text-2xl font-bold text-warning">{stats.onLeave}</p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-success/10">
-              <UserCheck className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Active</p>
-              <p className="text-2xl font-bold text-success">{stats.active}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Nurses</p>
-              <p className="text-2xl font-bold text-primary">{stats.nurses}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10">
-              <Users className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">On Leave</p>
-              <p className="text-2xl font-bold text-warning">{stats.onLeave}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
-
-      <StaffTable
-        staff={staffmembers} title="Staff table"
-        search={search}
-        statusStyles={statusStyles}
-        onSearchChange={(value) => {
-          setPage(1);
-          setSearch(value);
-        }}
-        setViewStaff={setViewStaff}
-        setEditStaff={openEditModal}
-        setDeleteStaff={setDeleteStaff}
-        page={page}
-        totalPages={users !== undefined ? users.pagination?.totalPages : 1}
-        onPageChange={setPage}
-
-      />
+      {isLoading ? (
+        <TableSkeleton rows={5} columns={6} />
+      ) : (
+        <StaffTable
+          staff={staffmembers} title="Staff table"
+          search={search}
+          statusStyles={statusStyles}
+          onSearchChange={(value) => {
+            setPage(1);
+            setSearch(value);
+          }}
+          setViewStaff={setViewStaff}
+          setEditStaff={openEditModal}
+          setDeleteStaff={setDeleteStaff}
+          page={page}
+          totalPages={users !== undefined ? users.pagination?.totalPages : 1}
+          onPageChange={setPage}
+        />
+      )}
 
       {/* Add/Edit Modal */}
       <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) { setAddModalOpen(false); setEditStaff(null); } }}>

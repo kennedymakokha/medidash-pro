@@ -21,6 +21,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { Patient } from '@/types/hospital';
 import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
 import { useGetusersoverviewQuery, useGetusersQuery } from '@/features/userSlice';
+import { StatsGridSkeleton, TableSkeleton, DepartmentGridSkeleton, AppointmentListSkeleton } from '@/components/loaders';
 
 function UnifiedDashboard() {
   const { userInfo: { user } } = useSelector((state: any) => state.auth)
@@ -32,7 +33,7 @@ function UnifiedDashboard() {
   const debouncedSearch = useDebounce(search, 400);
   const today = '2024-01-20';
   const [postPatient] = useCreatepatientMutation({})
-  const { data: depts } = useFetchdepartmentsQuery({})
+  const { data: depts, isLoading: deptsLoading } = useFetchdepartmentsQuery({})
   const { data: users } = useGetusersoverviewQuery({})
   const allusers = users !== undefined ? users : []
   const docs = allusers.filter(p => p.role === 'doctor')
@@ -40,7 +41,8 @@ function UnifiedDashboard() {
   const receptionists = allusers.filter(p => p.role === 'receptionists')
 
   const {
-    data: overview
+    data: overview,
+    isLoading: overviewLoading
   } = useFetchpatientsoverviewsQuery({});
 
   const {
@@ -98,40 +100,46 @@ function UnifiedDashboard() {
       subtitle={`Welcome, ${user?.name}`}
     >
       {/* --- Stats Grid --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {role === 'admin' && (
-          <>
-            <StatsCard title="Total Patients" value={patients.length} icon={Users} />
-            <StatsCard title="Today's Appointments" value={todayAppointments.length} icon={Calendar} />
-            <StatsCard title="Admitted Patients" value={admittedPatients.length} icon={Bed} />
-            <StatsCard title="Revenue (Monthly)" value="$248,500" icon={DollarSign} />
-          </>
-        )}
-        {role === 'doctor' && (
-          <>
-            <StatsCard title="My Patients" value={myPatients.length} icon={Users} />
-            <StatsCard title="Today's Appointments" value={todayAppointments.filter(a => a.doctorName === user?.name).length} icon={Calendar} />
-            <StatsCard title="Pending Consultations" value={myAppointments.filter(a => a.status === 'scheduled').length} icon={Clock} />
-            <StatsCard title="Completed Today" value={myAppointments.filter(a => a.status === 'completed').length} icon={CheckCircle} />
-          </>
-        )}
-        {role === 'nurse' && (
-          <>
-            <StatsCard title="Patients Under Care" value={admittedPatients.length} icon={Heart} />
-            <StatsCard title="Critical Patients" value={criticalPatients.length} icon={AlertTriangle} />
-            <StatsCard title="Pending Tasks" value={0} icon={ClipboardList} />
-            <StatsCard title="Completed Today" value={0} icon={CheckSquare} />
-          </>
-        )}
-        {role === 'receptionist' && (
-          <>
-            <StatsCard title="Today's Appointments" value={todayAppointments.length} icon={Calendar} />
-            <StatsCard title="Waiting Queue" value={waitingQueue.filter(w => w.status === 'waiting').length} icon={Clock} />
-            <StatsCard title="Checked In" value={waitingQueue.length} icon={CheckCircle} />
-            <StatsCard title="Total Patients" value={patients.length} icon={UserPlus} />
-          </>
-        )}
-      </div>
+      {overviewLoading ? (
+        <div className="mb-8">
+          <StatsGridSkeleton count={4} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {role === 'admin' && (
+            <>
+              <StatsCard title="Total Patients" value={patients.length} icon={Users} />
+              <StatsCard title="Today's Appointments" value={todayAppointments.length} icon={Calendar} />
+              <StatsCard title="Admitted Patients" value={admittedPatients.length} icon={Bed} />
+              <StatsCard title="Revenue (Monthly)" value="$248,500" icon={DollarSign} />
+            </>
+          )}
+          {role === 'doctor' && (
+            <>
+              <StatsCard title="My Patients" value={myPatients.length} icon={Users} />
+              <StatsCard title="Today's Appointments" value={todayAppointments.filter(a => a.doctorName === user?.name).length} icon={Calendar} />
+              <StatsCard title="Pending Consultations" value={myAppointments.filter(a => a.status === 'scheduled').length} icon={Clock} />
+              <StatsCard title="Completed Today" value={myAppointments.filter(a => a.status === 'completed').length} icon={CheckCircle} />
+            </>
+          )}
+          {role === 'nurse' && (
+            <>
+              <StatsCard title="Patients Under Care" value={admittedPatients.length} icon={Heart} />
+              <StatsCard title="Critical Patients" value={criticalPatients.length} icon={AlertTriangle} />
+              <StatsCard title="Pending Tasks" value={0} icon={ClipboardList} />
+              <StatsCard title="Completed Today" value={0} icon={CheckSquare} />
+            </>
+          )}
+          {role === 'receptionist' && (
+            <>
+              <StatsCard title="Today's Appointments" value={todayAppointments.length} icon={Calendar} />
+              <StatsCard title="Waiting Queue" value={waitingQueue.filter(w => w.status === 'waiting').length} icon={Clock} />
+              <StatsCard title="Checked In" value={waitingQueue.length} icon={CheckCircle} />
+              <StatsCard title="Total Patients" value={patients.length} icon={UserPlus} />
+            </>
+          )}
+        </div>
+      )}
       {/* --- Quick Actions --- */}
 
       {/* --- Quick Actions / Receptionist / Admin --- */}
@@ -180,27 +188,38 @@ function UnifiedDashboard() {
       {role === 'admin' && (
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4">Departments Overview</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {departments?.map(dept => <DepartmentCard key={dept._id} department={dept} />)}
-          </div>
+          {deptsLoading ? (
+            <DepartmentGridSkeleton count={6} />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {departments?.map(dept => <DepartmentCard key={dept._id} department={dept} />)}
+            </div>
+          )}
         </div>
       )}
 
       {/* --- Patients Table --- */}
       {(role === 'admin' || role === 'doctor' || role === 'receptionist') && (
-        <PatientTable
-          search={search}
-          onSearchChange={(value) => { setPage(1); setSearch(value); }}
-          page={page}
-          totalPages={data?.pagination?.totalPages ?? 1}
-          onPageChange={setPage}
-          refetch={() => { refetch(); }}
-          patients={role === 'doctor'
-            ? data?.data.filter(p => p.assignedDoctor === user?.name) ?? []
-            : data?.data ?? []
-          }
-          title={role === 'doctor' ? 'My Patients' : 'All Patients'}
-        />
+        isLoading ? (
+          <TableSkeleton rows={5} columns={6} />
+        ) : (
+          <PatientTable
+            search={search}
+            onSearchChange={(value) => { setPage(1); setSearch(value); }}
+            page={page}
+            limit={limit}
+            totalPages={data?.pagination?.totalPages ?? 1}
+            onPageChange={setPage}
+            refetch={() => { refetch(); }}
+            viewPaginated={() => {}}
+            viewAll={() => {}}
+            patients={role === 'doctor'
+              ? data?.data?.filter(p => p.assignedDoctor === user?.name) ?? []
+              : data?.data ?? []
+            }
+            title={role === 'doctor' ? 'My Patients' : 'All Patients'}
+          />
+        )
       )}
 
 

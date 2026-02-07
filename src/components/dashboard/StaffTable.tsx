@@ -120,7 +120,7 @@ export function StaffTable({
                         <td className="hidden lg:table-cell px-6 py-4">
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <Building2 className="w-3 h-3" />
-                                {member?.department?.name || '-'}
+                                {member?.department ? (typeof member.department === 'object' ? (member.department as { name?: string })?.name : member.department) : '-'}
                             </div>
                         </td>
 

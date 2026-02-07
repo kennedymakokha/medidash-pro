@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
 import { useGetusersQuery, usePostuserMutation } from '@/features/userSlice';
+import { StatsGridSkeleton, CardSkeleton } from '@/components/loaders';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const statusStyles = {
   active: 'bg-success/10 text-success border-success/20',
@@ -37,17 +39,17 @@ const statusStyles = {
 };
 
 export default function DoctorsPage() {
-  // const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
   const [search, setSearch] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewDoctor, setViewDoctor] = useState<Doctor | null>(null);
   const [editDoctor, setEditDoctor] = useState<Doctor | null>(null);
   const [deleteDoctor, setDeleteDoctor] = useState<Doctor | null>(null);
   const { data: depts } = useFetchdepartmentsQuery({})
-  const { data: users, refetch } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search })
+  const { data: users, refetch, isLoading, isFetching } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search })
   const doctors = users !== undefined ? users?.data : [];
   const [postDoctor] = usePostuserMutation({})
   const pagination = users?.pagination;
+  const showLoading = isLoading;
 
 
   const handleAddDoctor = async (doctorData: Doctor) => {
@@ -103,91 +105,123 @@ export default function DoctorsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Total Doctors</p>
-          <p className="text-2xl font-bold text-card-foreground">{doctors.length}</p>
+      {showLoading ? (
+        <StatsGridSkeleton count={4} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">Total Doctors</p>
+            <p className="text-2xl font-bold text-card-foreground">{doctors.length}</p>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">Active</p>
+            <p className="text-2xl font-bold text-success">{doctors.filter(d => d.status === 'active').length}</p>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">On Leave</p>
+            <p className="text-2xl font-bold text-warning">{doctors.filter(d => d.status === 'on-leave').length}</p>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <p className="text-sm text-muted-foreground">Departments</p>
+            <p className="text-2xl font-bold text-card-foreground">{depts !== undefined ? depts.length : 0}</p>
+          </div>
         </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Active</p>
-          <p className="text-2xl font-bold text-success">{doctors.filter(d => d.status === 'active').length}</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">On Leave</p>
-          <p className="text-2xl font-bold text-warning">{doctors.filter(d => d.status === 'on-leave').length}</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <p className="text-sm text-muted-foreground">Departments</p>
-          <p className="text-2xl font-bold text-card-foreground">{depts !== undefined ? depts.length : 0}</p>
-        </div>
-      </div>
+      )}
 
       {/* Doctors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {doctors.map((doctor) => (
-          <div
-            key={doctor._id}
-            className="bg-card rounded-xl p-6 shadow-card hover:shadow-elevated transition-shadow animate-slide-up"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Stethoscope className="w-6 h-6 text-primary" />
+      {showLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-xl p-6 shadow-card animate-pulse">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-12 h-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-card-foreground">{doctor.name}</h3>
-                  <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                <Skeleton className="h-8 w-8 rounded" />
+              </div>
+              <div className="space-y-2 mb-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-36" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {doctors.map((doctor) => (
+            <div
+              key={doctor._id}
+              className="bg-card rounded-xl p-6 shadow-card hover:shadow-elevated transition-shadow animate-slide-up"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Stethoscope className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-card-foreground">{doctor.name}</h3>
+                    <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setViewDoctor(doctor)}>
+                      <Eye className="w-4 h-4 mr-2" /> View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setEditDoctor(doctor)}>
+                      <Edit className="w-4 h-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => setDeleteDoctor(doctor)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Building2 className="w-4 h-4" />
+                  {doctor?.department?.name}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="w-4 h-4" />
+                  {doctor.phone_number}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="w-4 h-4" />
+                  {doctor.email}
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setViewDoctor(doctor)}>
-                    <Eye className="w-4 h-4 mr-2" /> View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setEditDoctor(doctor)}>
-                    <Edit className="w-4 h-4 mr-2" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => setDeleteDoctor(doctor)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Building2 className="w-4 h-4" />
-                {doctor?.department?.name}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                {doctor.phone_number}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                {doctor.email}
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className={cn('capitalize', statusStyles[doctor.status])}>
+                  {doctor?.status?.replace('-', ' ')}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{doctor.experience} yrs exp</span>
               </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <div className="flex items-center justify-between">
-              <Badge variant="outline" className={cn('capitalize', statusStyles[doctor.status])}>
-                {doctor?.status?.replace('-', ' ')}
-              </Badge>
-              <span className="text-xs text-muted-foreground">{doctor.experience} yrs exp</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {doctors.length === 0 && (
+      {!showLoading && doctors.length === 0 && (
         <div className="text-center py-12">
           <Stethoscope className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground">No doctors found</h3>
