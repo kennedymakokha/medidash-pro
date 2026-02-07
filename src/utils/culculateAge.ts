@@ -24,3 +24,16 @@ export const generateUnifiedId = (str: string) => {
     const random = Math.floor(Math.random() * 1000000); // random 6‑digit number 
     return `${str}_${timestamp}_${random}`;
 };
+
+export function formatCounter(num) {
+  if (num >= 1_000_000_000)
+    return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B'
+
+  if (num >= 1_000_000)
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+
+  if (num >= 1_000)
+    return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K'
+
+  return num.toString()
+}

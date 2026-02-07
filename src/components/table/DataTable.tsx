@@ -1,11 +1,12 @@
-import { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
+import { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 interface DataTableProps {
   title: string;
   search?: string;
   onSearchChange?: (value: string) => void;
   actionButton?: ReactNode;
+  addButton?: ReactNode;
   columns: ReactNode;
   rows: ReactNode;
   page?: number;
@@ -18,6 +19,7 @@ export function DataTable({
   search,
   onSearchChange,
   actionButton,
+  addButton,
   columns,
   rows,
   page,
@@ -43,8 +45,8 @@ export function DataTable({
                 className="w-full sm:w-64 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               />
             )}
-
             {actionButton}
+            {addButton}
           </div>
         </div>
       </div>
@@ -60,7 +62,7 @@ export function DataTable({
         {page && totalPages && onPageChange && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-border">
             <p className="text-sm text-muted-foreground">
-              Page <span className="font-medium">{page}</span> of{' '}
+              Page <span className="font-medium">{page}</span> of{" "}
               <span className="font-medium">{totalPages}</span>
             </p>
 

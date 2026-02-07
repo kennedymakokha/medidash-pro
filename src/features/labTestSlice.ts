@@ -1,9 +1,9 @@
 import { apiSlice } from "./apiSlice";
-const USER_URL = "/api/patients";
+const USER_URL = "/api/lab-tests";
 
-export const patientApiSlice = apiSlice.injectEndpoints({
+export const labApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        createpatient: builder.mutation({
+        createlab: builder.mutation({
             query: (data) => ({
                 url: `${USER_URL}`,
                 method: "POST",
@@ -11,10 +11,10 @@ export const patientApiSlice = apiSlice.injectEndpoints({
             })
         }),
 
-        fetchpatients: builder.query({
+        fetchlabs: builder.query({
             query: ({ page, limit, search,status }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&status=${status}`
         }),
-        fetchpatientsoverviews: builder.query({
+        fetchlabsoverviews: builder.query({
             query: () => `${USER_URL}/overview`
         }),
 
@@ -23,8 +23,8 @@ export const patientApiSlice = apiSlice.injectEndpoints({
 })
 
 export const {
-    useCreatepatientMutation,
-    useFetchpatientsQuery,
-    useFetchpatientsoverviewsQuery,
+    useCreatelabMutation,
+    useFetchlabsQuery,
+    useFetchlabsoverviewsQuery,
 
-} = patientApiSlice
+} = labApiSlice

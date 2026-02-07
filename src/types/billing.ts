@@ -1,6 +1,8 @@
 export interface LabTest {
-  id: string;
-  name: string;
+  id?: string;
+  clinic?:string
+  uuid?:string
+  testName: string;
   category: 'blood' | 'urine' | 'imaging' | 'pathology' | 'other';
   description: string;
   price: number;
@@ -10,8 +12,10 @@ export interface LabTest {
 }
 
 export interface Procedure {
-  id: string;
-  name: string;
+  id?: string;
+  procedureName: string;
+  uuid?:string
+  clinic?:string
   category: 'minor' | 'major' | 'diagnostic' | 'therapeutic';
   description: string;
   price: number;

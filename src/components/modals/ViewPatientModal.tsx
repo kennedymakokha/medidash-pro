@@ -20,6 +20,9 @@ import {
   Calendar,
   Stethoscope,
   DoorOpen,
+  User,
+  Replace,
+  Users2Icon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Patient } from "@/types/hospital";
@@ -54,7 +57,6 @@ export function ViewPatientModal({
         </DialogHeader>
 
         <div className="space-y-6">
-
           {/* ================= PATIENT HEADER (always visible) ================= */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -107,34 +109,55 @@ export function ViewPatientModal({
 
           {/* ================= PATIENT DETAILS (hidden when visits open) ================= */}
           {!showVisits && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Info icon={<Phone />} label="Phone" value={patient.phone} />
-              <Info icon={<Mail />} label="Email" value={patient.email} />
-              <Info icon={<MapPin />} label="Address" value={patient.address} />
-              <Info
-                icon={<Droplets className="text-destructive" />}
-                label="Blood Group"
-                value={patient.bloodgroup}
-                strong
-              />
-              {patient.assignedDoctor && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Info icon={<Phone />} label="Phone" value={patient.phone} />
+                <Info icon={<Mail />} label="Email" value={patient.email} />
                 <Info
-                  icon={<Stethoscope />}
-                  label="Doctor"
-                  value={patient.assignedDoctor.name}
+                  icon={<MapPin />}
+                  label="Address"
+                  value={patient.address}
                 />
-              )}
-              {patient.room && (
-                <Info icon={<DoorOpen />} label="Room" value={patient.room} />
-              )}
-              {patient.admissionDate && (
                 <Info
-                  icon={<Calendar />}
-                  label="Admission Date"
-                  value={patient.admissionDate}
+                  icon={<Droplets className="text-destructive" />}
+                  label="Blood Group"
+                  value={patient.bloodgroup}
+                  strong
                 />
-              )}
-            </div>
+                {patient.assignedDoctor && (
+                  <Info
+                    icon={<Stethoscope />}
+                    label="Doctor"
+                    value={patient.assignedDoctor.name}
+                  />
+                )}
+                {patient.room && (
+                  <Info icon={<DoorOpen />} label="Room" value={patient.room} />
+                )}
+                {patient.admissionDate && (
+                  <Info
+                    icon={<Calendar />}
+                    label="Admission Date"
+                    value={patient.admissionDate}
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Info
+                  icon={<User />}
+                  label="Nextofkin Name"
+                  value={patient.nokName}
+                />
+                <Info icon={<Phone />} label="Phone" value={patient.nokPhone} />
+
+                <Info
+                  icon={<Users2Icon/>}
+                  label="Relation"
+                  value={patient.nokRelationship}
+                  strong
+                />
+              </div>
+            </>
           )}
         </div>
       </DialogContent>

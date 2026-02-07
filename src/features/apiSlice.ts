@@ -4,7 +4,7 @@ export const bURl = "https://d33f-41-139-236-221.ngrok-free.app/"
 // const baseQuery = fetchBaseQuery({ baseUrl: "" })
 const getAuth = async () => {
     try {
-        let t = localStorage.getItem("token");
+        const t= localStorage.getItem("token");
         return `${t}`; // Return the retrieved token
     } catch (error) {
         console.error('Error fetching auth token:', error);
@@ -15,7 +15,7 @@ const getAuth = async () => {
 const baseQuery = fetchBaseQuery({
     baseUrl: bURl,
     prepareHeaders: async (headers) => {
-        let token = await getAuth()
+        const token = await getAuth()
         headers.set('Authorization', `Bearer ${token}`)
         return headers;
     },
