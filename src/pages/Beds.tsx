@@ -7,28 +7,12 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import {
   Search,
   Plus,
@@ -37,21 +21,19 @@ import {
   Trash2,
   Bed,
   User,
-  Building2,
   Filter,
   CheckCircle,
   Clock,
-  XCircle,
 } from "lucide-react";
 import { useCreatebedMutation, useFetchbedsQuery } from "@/features/bedSlice";
 import { BedData, WardData } from "@/types/hospital";
-import { generateUnifiedId } from "@/utils/culculateAge";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
-  useCreatewardMutation,
   useFetchwardsoverviewsQuery,
 } from "@/features/wordSlice";
 import { BedFormModal } from "@/components/modals/bedsForm";
+import { StatsGridSkeleton } from "@/components/loaders";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusStyles = {
   available: "bg-success/10 text-success border-success/20",
@@ -79,16 +61,14 @@ export default function BedsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
 
-  const { data, refetch } = useFetchbedsQuery({
+  const { data, refetch, isLoading } = useFetchbedsQuery({
     page,
     limit,
-
     search: debouncedSearch,
   });
   const { data: wards, refetch: refetchWards } = useFetchwardsoverviewsQuery({
     page,
     limit,
-
     search: debouncedSearch,
   });
   const beds = data !== undefined ? data.data : [];
@@ -210,150 +190,181 @@ export default function BedsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Bed className="w-5 h-5 text-primary" />
+      {isLoading ? (
+        <StatsGridSkeleton count={4} />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Bed className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Beds</p>
+                <p className="text-2xl font-bold text-card-foreground">
+                  {stats.total}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Beds</p>
-              <p className="text-2xl font-bold text-card-foreground">
-                {stats.total}
-              </p>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-success/10">
+                <CheckCircle className="w-5 h-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Available</p>
+                <p className="text-2xl font-bold text-success">
+                  {stats.available}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Occupied</p>
+                <p className="text-2xl font-bold text-primary">
+                  {stats.occupied}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-warning/10">
+                <Clock className="w-5 h-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Maintenance</p>
+                <p className="text-2xl font-bold text-warning">
+                  {stats.maintenance}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-success/10">
-              <CheckCircle className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Available</p>
-              <p className="text-2xl font-bold text-success">
-                {stats.available}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <User className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Occupied</p>
-              <p className="text-2xl font-bold text-primary">
-                {stats.occupied}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10">
-              <Clock className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Maintenance</p>
-              <p className="text-2xl font-bold text-warning">
-                {stats.maintenance}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Beds Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredBeds.map((bed) => (
-          <Card
-            key={bed.id}
-            className={cn(
-              "shadow-card hover:shadow-elevated transition-shadow",
-              bed.status === "available" && "border-success/30",
-            )}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <div
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="shadow-card animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-10 h-10 rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-3 w-12" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredBeds.map((bed) => (
+            <Card
+              key={bed.id}
+              className={cn(
+                "shadow-card hover:shadow-elevated transition-shadow",
+                bed.status === "available" && "border-success/30",
+              )}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg",
+                        bed.status === "available" ? "bg-success/10" : "bg-muted",
+                      )}
+                    >
+                      <Bed
+                        className={cn(
+                          "w-5 h-5",
+                          bed.status === "available"
+                            ? "text-success"
+                            : "text-muted-foreground",
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{bed.bedNumber}</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {bed?.ward?.wardName}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openEditModal(bed)}>
+                        <Edit className="w-4 h-4 mr-2" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => setDeleteBed(bed)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge
                     className={cn(
-                      "p-2 rounded-lg",
-                      bed.status === "available" ? "bg-success/10" : "bg-muted",
+                      "capitalize text-xs",
+                      typeStyles[bed?.ward?.type],
                     )}
                   >
-                    <Bed
-                      className={cn(
-                        "w-5 h-5",
-                        bed.status === "available"
-                          ? "text-success"
-                          : "text-muted-foreground",
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{bed.bedNumber}</CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      {bed?.ward?.wardName}
+                    {bed?.ward?.type}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={cn("capitalize text-xs", statusStyles[bed.status])}
+                  >
+                    {bed.status}
+                  </Badge>
+                </div>
+                {bed.patientName && (
+                  <div className="pt-2 border-t border-border">
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium truncate">
+                        {bed.patientName}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Since: {bed.admissionDate}
                     </p>
                   </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEditModal(bed)}>
-                      <Edit className="w-4 h-4 mr-2" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setDeleteBed(bed)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Badge
-                  className={cn(
-                    "capitalize text-xs",
-                    typeStyles[bed?.ward?.type],
-                  )}
-                >
-                  {bed?.ward?.type}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={cn("capitalize text-xs", statusStyles[bed.status])}
-                >
-                  {bed.status}
-                </Badge>
-              </div>
-              {bed.patientName && (
-                <div className="pt-2 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium truncate">
-                      {bed.patientName}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Since: {bed.admissionDate}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {filteredBeds.length === 0 && (
         <div className="text-center py-12">

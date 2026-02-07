@@ -128,7 +128,7 @@ export function ViewPatientModal({
                   <Info
                     icon={<Stethoscope />}
                     label="Doctor"
-                    value={patient.assignedDoctor.name}
+                    value={patient.assignedDoctor}
                   />
                 )}
                 {patient.room && (

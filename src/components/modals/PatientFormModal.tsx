@@ -138,7 +138,12 @@ export function PatientFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     console.log(formData)
     e.preventDefault();
-    onSubmit({ ...formData, visits: [] } as Patient);
+    const patientData = {
+      ...formData,
+      dob: formData.dob ? formData.dob.toISOString().split('T')[0] : '',
+      visits: []
+    } as Patient;
+    onSubmit(patientData);
     onOpenChange(false);
   };
 

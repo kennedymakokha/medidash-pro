@@ -11,7 +11,7 @@ export interface User {
 
 export interface Patient {
   uuid: string;
-  dob: Date;
+  dob: string;
   id?: string;
   name: string;
   visits: Visit[]

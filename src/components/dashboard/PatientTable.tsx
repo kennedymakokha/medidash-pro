@@ -142,7 +142,7 @@ export function PatientTable({
               </Badge>
             </td>
             <td className="px-6 py-4">
-              {patient?.assignedDoctor?.name || "-"}
+              {patient?.assignedDoctor || "-"}
             </td>
             <td className="px-6 py-4 text-right">
               <DropdownMenu>
