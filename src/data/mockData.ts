@@ -248,7 +248,7 @@ export const mockDoctors: Doctor[] = [
     schedule: 'Mon-Fri 7AM-3PM',
   },
 ];
-const mockConsultations: Consultation[] = [
+const mockConsultations: any[] = [
   {
     id: "1",
     patientId: "patient-001",

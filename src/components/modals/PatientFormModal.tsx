@@ -92,7 +92,7 @@ export function PatientFormModal({
         address: patient.address ?? '',
         bloodgroup: patient.bloodgroup ?? 'A+',
         status: patient.status ?? 'outpatient',
-        assignedDoctor: patient.assignedDoctor ?? '',
+        assignedDoctor: (typeof patient.assignedDoctor === 'object' ? patient.assignedDoctor?.name : patient.assignedDoctor) ?? '',
         room: patient.room ?? '',
         nokName: patient.nokName ?? '',
         nokPhone: patient.nokPhone ?? '',

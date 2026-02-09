@@ -6,7 +6,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
-  department?: Department;
+  department?: Department | string;
+  clinic?: { name?: string };
 }
 
 export interface Patient {
@@ -23,7 +24,7 @@ export interface Patient {
   bloodgroup: string;
   status: 'admitted' | 'outpatient' | 'discharged' | 'critical';
   admissionDate?: string;
-  assignedDoctor?: User;
+  assignedDoctor?: User | string;
   room?: string;
   nokName?: string;
   nokRelationship?: string;
@@ -87,7 +88,7 @@ export interface Department {
   staffCount?: number;
   patientCount?: number;
   fee?: number;
-
+  consultationFee?: number;
 }
 
 
