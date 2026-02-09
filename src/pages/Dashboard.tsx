@@ -22,9 +22,10 @@ import { Patient } from '@/types/hospital';
 import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
 import { useGetusersoverviewQuery, useGetusersQuery } from '@/features/userSlice';
 import { StatsGridSkeleton, TableSkeleton, DepartmentGridSkeleton, AppointmentListSkeleton } from '@/components/loaders';
+import { RootState } from '@/store';
 
 function UnifiedDashboard() {
-  const { userInfo: { user } } = useSelector((state: any) => state.auth)
+  const { userInfo: { user } } = useSelector((state:RootState) => state.auth)
   const { appointments, addAppointment } = useHospitalData();
   const [page, setPage] = useState(1);
   const limit = 5;

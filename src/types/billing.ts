@@ -1,5 +1,8 @@
+import { User } from "./hospital";
+
 export interface LabTest {
   id?: string;
+  _id?:string
   clinic?:string
   uuid?:string
   testName: string;
@@ -25,14 +28,17 @@ export interface Procedure {
 }
 
 export interface Consultation {
-  id: string;
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  doctorName: string;
-  departmentId: string;
-  departmentName: string;
-  stage: 'pre-lab' | 'awaiting-lab' | 'post-lab' | 'completed';
+  id?: string;
+  uuid?:string
+  patientId?: string;
+  patientMongoose?:string;
+  visits?:[]
+  name?: string;
+  doctorId?: string;
+  doctorName?: string;
+  departmentId?: string;
+  departmentName?: string;
+  track: 'pre-lab' | 'awaiting-lab' | 'post-lab' | 'completed';
   chiefComplaint: string;
   symptoms: string[];
   diagnosis?: string;
@@ -41,6 +47,7 @@ export interface Consultation {
   prescribedProcedures: string[];
   medications?: string[];
   notes: string;
+  assignedDoctor:User
   consultationFee: number;
   createdAt: string;
   updatedAt: string;

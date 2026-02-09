@@ -22,6 +22,7 @@ import { UserRole } from '@/types/hospital';
 import { toast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
+import { RootState } from '@/store';
 
 interface NavItem {
   label: string;
@@ -40,8 +41,8 @@ const navItems: NavItem[] = [
   { label: 'Departments', href: '/departments', icon: Building2, roles: ['admin'], implemented: true },
   { label: 'Staff', href: '/staff', icon: UserPlus, roles: ['admin'], implemented: true },
   { label: 'Lab Tests', href: '/lab-tests', icon: TestTube, roles: ['admin', 'doctor', 'nurse'], implemented: true },
-  { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['nurse'], implemented: true },
-  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['nurse', 'doctor'], implemented: true },
+  { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['admin','nurse'], implemented: true },
+  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['admin','nurse', 'doctor'], implemented: true },
   { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'], implemented: true },
   { label: 'Reports', href: '/reports', icon: ClipboardList, roles: ['admin', 'doctor'], implemented: true },
 ];
@@ -53,7 +54,7 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userInfo: { user } } = useSelector((state: any) => state.auth)
+  const { userInfo: { user } } = useSelector((state: RootState) => state.auth)
   const { logout } = useAuth();
 
   const filteredNavItems = navItems.filter(

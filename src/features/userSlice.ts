@@ -97,7 +97,7 @@ export const usersApiSlice = apiSlice.injectEndpoints({
             }
         }),
         getusers: builder.query({
-            query: (data) => `${USER_URL}?role=${data.role}&page=${data.page}&limit=${data.limit}&search=${data.search}`
+            query: (data) => `${USER_URL}?role=${data.role}&page=${data.page}&limit=${data.limit}&search=${data.search}&track=${data.tack}`
         }),
         getusersoverview: builder.query({
             query: (data) => `${USER_URL}/overview?role=${data.role}`
