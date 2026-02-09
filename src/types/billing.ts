@@ -32,7 +32,7 @@ export interface Consultation {
   uuid?:string
   patientId?: string;
   patientMongoose?:string;
-  visits?:[]
+  visits?: any[]
   name?: string;
   doctorId?: string;
   doctorName?: string;

@@ -3,28 +3,43 @@ import { useConsultations } from "@/hooks/useConsultations";
 import { ConsultationStats } from "./Components/ConsultationStats";
 import { ConsultationTabs } from "./Components/ConsultationTabs";
 import { ConsultationFormDialog } from "./Components/ConsultationFormDialog";
+import { ConsultationViewDialog } from "./Components/ConsultationViewDialog";
 import { useState } from "react";
 import { Consultation, LabTest } from "@/types/billing";
+import { useFetchlabsQuery } from "@/features/labTestSlice";
+import { toast } from "@/hooks/use-toast";
+import { useCreatevisitMutation } from "@/features/visitsSlice";
+import { ConsultationSkeleton } from "@/components/loaders";
 
 export default function ConsultationsPage() {
-  const { data, isLoading, track, setTrack, createVisit } = useConsultations();
-  const [editingConsultation, setEditingConsultation] =
-    useState<Consultation | null>(null);
+  const { data, isLoading, track, setTrack, refetch } = useConsultations();
   const consultations = data?.data ?? [];
+
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
+
+  const { data: labsData } = useFetchlabsQuery({ page: 1, limit: 10000, search: "", status: "" });
+  const labTests: LabTest[] = labsData?.data ?? [];
+
+  const [postConsultation] = useCreatevisitMutation();
+
   const [formData, setFormData] = useState({
     chiefComplaint: "",
     uuid: "",
+    patientId: "",
+    patientMongoose: "",
     symptoms: "",
-    patientId:"",
     prescribedTests: [] as LabTest[],
     notes: "",
   });
+
   const handleOpenAddModal = (data: Consultation) => {
-    console.log(data);
     setFormData({
       uuid: data?.visits?.[0]?.uuid || "",
-      patientId: data?.uuid,
-      patientMongoose: data?.visits[0].patientMongoose,
+      patientId: data?.uuid || "",
+      patientMongoose: data?.visits?.[0]?.patientMongoose || "",
       chiefComplaint: "",
       symptoms: "",
       prescribedTests: [],
@@ -35,40 +50,32 @@ export default function ConsultationsPage() {
   };
 
   const handleView = (consultation: Consultation) => {
-    console.log(consultation);
     setSelectedConsultation(consultation);
     setIsViewModalOpen(true);
   };
 
-  const handleAdvanceStage = (consultation: Consultation) => {};
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      ...formData,
-      track: "billing",
-      totallabTestFee: totalTestFee,
-
-      prescribedTests: formData.prescribedTests.map((t) => t._id),
-    };
-    await postConsultation(payload).unwrap();
-    await refetch();
-    toast({
-      title: "consultation Staged",
-      description: `Consultation started.`,
+  const handleEdit = (consultation: Consultation) => {
+    setFormData({
+      uuid: consultation.uuid || "",
+      patientId: consultation.patientId || "",
+      patientMongoose: consultation.patientMongoose || "",
+      chiefComplaint: consultation.chiefComplaint,
+      symptoms: consultation.symptoms?.join(", ") || "",
+      prescribedTests: [],
+      notes: consultation.notes,
     });
-    setIsFormModalOpen(false);
-    console.log(payload);
-    //  toast({
-    //     title: "Stage Updated",
-    //     description: `Consultation moved to .`,
-    //   });
-    //    setIsFormModalOpen(false);
-    //     // setConsultations([newConsultation, ...consultations]);
-    //     toast({ title: "Created", description: "New consultation started." });
-    //   }
-    //   setIsFormModalOpen(false);
+    setEditingConsultation(consultation);
+    setIsFormModalOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Consultations">
+        <ConsultationSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Consultations">
       <ConsultationStats consultations={consultations} />
@@ -86,20 +93,29 @@ export default function ConsultationsPage() {
         open={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         initialData={editingConsultation ? formData : null}
-        labTests={test}
-        onSubmit={async (data, totalFee) => {
-          await postConsultation({
-            ...data,
-            track: "billing",
-            totallabTestFee: totalFee,
-            prescribedTests: data.prescribedTests.map((t) => t._id),
-          }).unwrap();
-          refetch();
+        labTests={labTests}
+        onSubmit={async (formPayload, totalFee) => {
+          try {
+            await postConsultation({
+              ...formPayload,
+              track: "billing",
+              totallabTestFee: totalFee,
+              prescribedTests: formPayload.prescribedTests.map((t) => t._id),
+            }).unwrap();
+            await refetch();
+            toast({ title: "Consultation Staged", description: "Consultation started." });
+            setIsFormModalOpen(false);
+          } catch {
+            toast({ title: "Error", description: "Failed to save consultation.", variant: "destructive" });
+          }
         }}
       />
 
-      <ConsultationFormDialog />
-      <ConsultationViewDialog />
+      <ConsultationViewDialog
+        open={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        consultation={selectedConsultation}
+      />
     </DashboardLayout>
   );
 }

@@ -15,6 +15,8 @@ import {
   X,
   TestTube,
   FileText,
+  DollarSign,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +46,8 @@ const navItems: NavItem[] = [
   { label: 'Patient Care', href: '/patient-care', icon: Heart, roles: ['admin','nurse'], implemented: true },
   { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['admin','nurse', 'doctor'], implemented: true },
   { label: 'Bed Management', href: '/beds', icon: Bed, roles: ['admin', 'nurse', 'receptionist'], implemented: true },
+  { label: 'Lab Orders', href: '/lab-orders', icon: FlaskConical, roles: ['admin', 'doctor', 'nurse'], implemented: true },
+  { label: 'Finance', href: '/finance', icon: DollarSign, roles: ['admin', 'receptionist'], implemented: true },
   { label: 'Reports', href: '/reports', icon: ClipboardList, roles: ['admin', 'doctor'], implemented: true },
 ];
 

@@ -128,7 +128,7 @@ export function ViewPatientModal({
                   <Info
                     icon={<Stethoscope />}
                     label="Doctor"
-                    value={patient.assignedDoctor}
+                    value={typeof patient.assignedDoctor === 'object' ? patient.assignedDoctor?.name || '' : patient.assignedDoctor || ''}
                   />
                 )}
                 {patient.room && (
