@@ -39,7 +39,7 @@ function VisitsAccordion({ visits }: { visits: Visit[] }) {
                     Visit on {date}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Seen by {visit.created_by?.name || "Unknown clinician"}
+                    Seen by {visit.assignedDoctor?.name || "Unknown clinician"}
                   </p>
                 </div>
 

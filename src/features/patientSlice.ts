@@ -12,7 +12,7 @@ export const patientApiSlice = apiSlice.injectEndpoints({
         }),
 
         fetchpatients: builder.query({
-            query: ({ page, limit, search,status,track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&status=${status}&track=${track}`
+            query: ({ page, limit, billing, search, status, track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&status=${status}&track=${track}&billing=${billing}`
         }),
         fetchpatientsoverviews: builder.query({
             query: () => `${USER_URL}/overview`

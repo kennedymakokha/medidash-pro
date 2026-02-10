@@ -38,6 +38,7 @@ export interface Visit {
   visitDate: string | null;
   createdAt: string;
   bp?: string;
+  assignedDoctor?:User;
   pulse?: string;
   temperature?: string;
   respiratoryRate?: string;

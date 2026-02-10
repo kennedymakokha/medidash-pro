@@ -38,8 +38,7 @@ function UnifiedDashboard() {
   const { data: users } = useGetusersoverviewQuery({})
   const allusers = users !== undefined ? users : []
   const docs = allusers.filter(p => p.role === 'doctor')
-  const nurses = allusers.filter(p => p.role === 'nurses')
-  const receptionists = allusers.filter(p => p.role === 'receptionists')
+
 
   const {
     data: overview,

@@ -13,8 +13,8 @@ type Props = {
 };
 
 const TABS = [
-  { label: "All", value: "all" },
-  { label: "Pre-Lab", value: "triage" },
+  
+  { label: "Pre-Lab", value: "pre-lab" },
   { label: "Awaiting Lab", value: "awaiting-lab" },
   { label: "Post-Lab", value: "post-lab" },
   { label: "Completed", value: "completed" },
@@ -30,7 +30,7 @@ export function ConsultationTabs({
 }: Props) {
   const filterByTab = (tab: string) =>
     consultations.filter(
-      (c) => tab === "all" || c.track === tab,
+      (c) => tab === "pre-lab" || c.track === tab,
     );
 
   return (

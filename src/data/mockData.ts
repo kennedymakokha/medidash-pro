@@ -1,3 +1,4 @@
+import { Invoice } from '@/types/finance';
 import { Patient, Appointment, Department } from '@/types/hospital';
 
 export const mockPatients: Patient[] = [
@@ -327,5 +328,157 @@ const mockConsultations: any[] = [
     consultationFee: 100,
     createdAt: "2024-01-17T09:00:00Z",
     updatedAt: "2024-01-17T09:45:00Z",
+  },
+];
+
+
+const mockInvoices: Invoice[] = [
+  {
+    id: "INV-001",
+    patientId: "patient-001",
+    patientName: "John Smith",
+    date: "2024-01-20",
+    items: [
+      {
+        description: "Cardiology Consultation",
+        category: "consultation",
+        quantity: 1,
+        unitPrice: 150,
+        total: 150,
+      },
+      {
+        description: "ECG",
+        category: "lab-test",
+        quantity: 1,
+        unitPrice: 75,
+        total: 75,
+      },
+      {
+        description: "Blood Panel",
+        category: "lab-test",
+        quantity: 1,
+        unitPrice: 120,
+        total: 120,
+      },
+    ],
+    subtotal: 345,
+    tax: 0,
+    total: 345,
+    status: "pending",
+  },
+  {
+    id: "INV-002",
+    patientId: "patient-002",
+    patientName: "Mary Johnson",
+    date: "2024-01-19",
+    items: [
+      {
+        description: "Neurology Consultation",
+        category: "consultation",
+        quantity: 1,
+        unitPrice: 200,
+        total: 200,
+      },
+      {
+        description: "MRI Brain",
+        category: "lab-test",
+        quantity: 1,
+        unitPrice: 500,
+        total: 500,
+      },
+    ],
+    subtotal: 700,
+    tax: 0,
+    total: 700,
+    status: "paid",
+    paymentMethod: "insurance",
+    paidAt: "2024-01-20",
+  },
+  {
+    id: "INV-003",
+    patientId: "patient-003",
+    patientName: "Robert Williams",
+    date: "2024-01-18",
+    items: [
+      {
+        description: "Cardiology Consultation",
+        category: "consultation",
+        quantity: 1,
+        unitPrice: 150,
+        total: 150,
+      },
+      {
+        description: "Stress Test",
+        category: "lab-test",
+        quantity: 1,
+        unitPrice: 200,
+        total: 200,
+      },
+      {
+        description: "Lipid Panel",
+        category: "lab-test",
+        quantity: 1,
+        unitPrice: 80,
+        total: 80,
+      },
+      {
+        description: "Atorvastatin 20mg (30 tabs)",
+        category: "medication",
+        quantity: 1,
+        unitPrice: 25,
+        total: 25,
+      },
+    ],
+    subtotal: 455,
+    tax: 0,
+    total: 455,
+    status: "overdue",
+  },
+  {
+    id: "INV-004",
+    patientId: "patient-004",
+    patientName: "Jennifer Davis",
+    date: "2024-01-17",
+    items: [
+      {
+        description: "Pediatrics Consultation",
+        category: "consultation",
+        quantity: 1,
+        unitPrice: 100,
+        total: 100,
+      },
+    ],
+    subtotal: 100,
+    tax: 0,
+    total: 100,
+    status: "paid",
+    paymentMethod: "cash",
+    paidAt: "2024-01-17",
+  },
+  {
+    id: "INV-005",
+    patientId: "patient-005",
+    patientName: "David Brown",
+    date: "2024-01-21",
+    items: [
+      {
+        description: "Cardiology Consultation",
+        category: "consultation",
+        quantity: 1,
+        unitPrice: 150,
+        total: 150,
+      },
+      {
+        description: "Bed - Room 305 (3 nights)",
+        category: "bed",
+        quantity: 3,
+        unitPrice: 200,
+        total: 600,
+      },
+    ],
+    subtotal: 750,
+    tax: 0,
+    total: 750,
+    status: "pending",
   },
 ];

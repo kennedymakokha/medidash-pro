@@ -52,6 +52,7 @@ export function ConsultationFormDialog({
     chiefComplaint: "",
     symptoms: "",
     prescribedTests: [],
+    
     notes: "",
   });
 

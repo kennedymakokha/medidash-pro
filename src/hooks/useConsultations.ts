@@ -5,7 +5,7 @@ import { useDebounce } from "./use-debounce";
 
 export function useConsultations() {
   const [page, setPage] = useState(1);
-  const [track, setTrack] = useState("triage");
+  const [track, setTrack] = useState("pre-lab");
   const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounce(search, 400);
