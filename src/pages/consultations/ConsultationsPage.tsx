@@ -17,33 +17,47 @@ export default function ConsultationsPage() {
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
-  const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
+  const [selectedConsultation, setSelectedConsultation] =
+    useState<Consultation | null>(null);
+  const [editingConsultation, setEditingConsultation] =
+    useState<Consultation | null>(null);
 
-  const { data: labsData } = useFetchlabsQuery({ page: 1, limit: 10000, search: "", status: "" });
+  const { data: labsData } = useFetchlabsQuery({
+    page: 1,
+    limit: 10000,
+    search: "",
+    status: "",
+  });
   const labTests: LabTest[] = labsData?.data ?? [];
 
   const [postConsultation] = useCreatevisitMutation();
-
-  const [formData, setFormData] = useState({
+  const intittialFormData = {
     chiefComplaint: "",
     uuid: "",
     patientId: "",
     patientMongoose: "",
+    orderedBy: "",
     symptoms: "",
     prescribedTests: [] as LabTest[],
     notes: "",
-  });
+    visitId: "",
+    orderedAt: Date(),
+  };
+  const [formData, setFormData] = useState(intittialFormData);
 
   const handleOpenAddModal = (data: Consultation) => {
+    console.log(data, data.visits);
     setFormData({
-      uuid: data?.visits?.[0]?.uuid || "",
-      patientId: data?.uuid || "",
-      patientMongoose: data?.visits?.[0]?.patientMongoose || "",
+      uuid: data?.visits?.[0]?.uuid,
+      patientId: data?.visits?.[0]?.patientMongoose,
+      visitId: data?.visits?.[0]?._id,
+      patientMongoose: data?.visits?.[0]?.patientMongoose,
+      orderedBy: data?.visits?.[0].assignedDoctor,
       chiefComplaint: "",
       symptoms: "",
       prescribedTests: [],
       notes: "",
+      orderedAt: Date(),
     });
     setEditingConsultation(null);
     setIsFormModalOpen(true);
@@ -52,20 +66,6 @@ export default function ConsultationsPage() {
   const handleView = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
     setIsViewModalOpen(true);
-  };
-
-  const handleEdit = (consultation: Consultation) => {
-    setFormData({
-      uuid: consultation.uuid || "",
-      patientId: consultation.patientId || "",
-      patientMongoose: consultation.patientMongoose || "",
-      chiefComplaint: consultation.chiefComplaint,
-      symptoms: consultation.symptoms?.join(", ") || "",
-      prescribedTests: [],
-      notes: consultation.notes,
-    });
-    setEditingConsultation(consultation);
-    setIsFormModalOpen(true);
   };
 
   if (isLoading) {
@@ -86,7 +86,7 @@ export default function ConsultationsPage() {
         onChange={setTrack}
         onNext={handleOpenAddModal}
         onView={handleView}
-        onEdit={handleEdit}
+        onEdit={() => console.log("object")}
       />
 
       <ConsultationFormDialog
@@ -97,16 +97,43 @@ export default function ConsultationsPage() {
         onSubmit={async (formPayload, totalFee) => {
           try {
             await postConsultation({
-              ...formPayload,
-              track: "billing",
+              // 🔹 Parent metadata
+              uuid: formData.uuid,
+              visitId: formData.visitId,
+              patientId: formData.patientId,
+              patientMongoose: formData.patientMongoose,
+              orderedBy: formData.orderedBy,
+
+              // 🔹 Dialog data
+              chiefComplaint: formPayload.chiefComplaint,
+              symptoms: formPayload.symptoms,
+              notes: formPayload.notes,
+
+              track:
+                formPayload.prescribedTests.length > 0
+                  ? "lab_billing"
+                  : "med_billing",
+
+              status: "pending",
               totallabTestFee: totalFee,
+
               prescribedTests: formPayload.prescribedTests.map((t) => t._id),
             }).unwrap();
+
             await refetch();
-            toast({ title: "Consultation Staged", description: "Consultation started." });
+
+            toast({
+              title: "Consultation Staged",
+              description: "Consultation started.",
+            });
+
             setIsFormModalOpen(false);
           } catch {
-            toast({ title: "Error", description: "Failed to save consultation.", variant: "destructive" });
+            toast({
+              title: "Error",
+              description: "Failed to save consultation.",
+              variant: "destructive",
+            });
           }
         }}
       />

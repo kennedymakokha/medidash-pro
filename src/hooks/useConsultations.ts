@@ -7,6 +7,7 @@ export function useConsultations() {
   const [page, setPage] = useState(1);
   const [track, setTrack] = useState("pre-lab");
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("pending");
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -24,6 +25,7 @@ export function useConsultations() {
     page,
     setPage,
     track,
+    status,
     setTrack,
     search,
     setSearch,

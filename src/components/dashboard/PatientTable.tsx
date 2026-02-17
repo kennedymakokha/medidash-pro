@@ -105,6 +105,9 @@ export function PatientTable({
         columns={
           <tr className="bg-muted/50">
             <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
+              ID
+            </th>
+            <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
               Patient
             </th>
             <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
@@ -128,7 +131,12 @@ export function PatientTable({
           <tr key={patient.uuid} className="hover:bg-muted/30">
             <td className="px-6 py-4">
               <p className="font-medium">
-                {highlightText(patient.name, search)}
+                {highlightText(patient?.uuid, search)}
+              </p>
+            </td>
+            <td className="px-6 py-4">
+              <p className="font-medium">
+                {highlightText(patient?.name, search)}
               </p>
               <p className="text-sm text-muted-foreground">
                 {highlightText(patient.phone ?? "", search)}

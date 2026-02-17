@@ -23,6 +23,8 @@ import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
 import { useGetusersoverviewQuery, useGetusersQuery } from '@/features/userSlice';
 import { StatsGridSkeleton, TableSkeleton, DepartmentGridSkeleton, AppointmentListSkeleton } from '@/components/loaders';
 import { RootState } from '@/store';
+import { useFetchmonthlysumQuery } from '@/features/paymentSlice';
+import { formatCounter } from '@/utils/culculateAge';
 
 function UnifiedDashboard() {
   const { userInfo: { user } } = useSelector((state:RootState) => state.auth)
@@ -56,7 +58,8 @@ function UnifiedDashboard() {
     search: debouncedSearch,
   });
 
-
+const {data:monthly}= useFetchmonthlysumQuery({})
+console.log(monthly);
   const patients = overview !== undefined ? overview.patients : []
 
   const [patientModalOpen, setPatientModalOpen] = useState(false);
@@ -111,7 +114,7 @@ function UnifiedDashboard() {
               <StatsCard title="Total Patients" value={patients.length} icon={Users} />
               <StatsCard title="Today's Appointments" value={todayAppointments.length} icon={Calendar} />
               <StatsCard title="Admitted Patients" value={admittedPatients.length} icon={Bed} />
-              <StatsCard title="Revenue (Monthly)" value="$248,500" icon={DollarSign} />
+              <StatsCard title="Revenue (Monthly)" value={`Ksh ${monthly?.total?formatCounter(monthly?.total):0}`}icon={DollarSign} />
             </>
           )}
           {role === 'doctor' && (
@@ -192,7 +195,7 @@ function UnifiedDashboard() {
             <DepartmentGridSkeleton count={6} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {departments?.map(dept => <DepartmentCard key={dept._id} department={dept} />)}
+              {departments?.data?.map(dept => <DepartmentCard key={dept._id} department={dept} />)}
             </div>
           )}
         </div>

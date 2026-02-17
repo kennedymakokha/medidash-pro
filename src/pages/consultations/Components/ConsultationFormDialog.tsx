@@ -20,7 +20,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
-import { LabTest } from "@/types/billing";
+import { Consultation, LabTest } from "@/types/billing";
 
 export type ConsultationFormData = {
   uuid: string;
@@ -38,6 +38,7 @@ type Props = {
   initialData?: ConsultationFormData | null;
   labTests: LabTest[];
   onSubmit: (data: ConsultationFormData, totalFee: number) => Promise<void>;
+ 
 };
 
 export function ConsultationFormDialog({
@@ -46,6 +47,7 @@ export function ConsultationFormDialog({
   initialData,
   labTests,
   onSubmit,
+  
 }: Props) {
   const [formData, setFormData] = useState<ConsultationFormData>({
     uuid: "",
@@ -84,6 +86,7 @@ export function ConsultationFormDialog({
     onClose();
   };
 
+  console.log(formData);
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">

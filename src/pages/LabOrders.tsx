@@ -39,6 +39,7 @@ import {
   FileText,
   Loader2,
 } from "lucide-react";
+import { useFetchvisitlabordersQuery } from "@/features/visitsSlice";
 
 interface LabOrder {
   id: string;
@@ -77,7 +78,7 @@ const priorityStyles: Record<string, string> = {
   urgent: "bg-warning/10 text-warning",
   stat: "bg-destructive/10 text-destructive",
 };
-
+ 
 export default function LabOrdersPage() {
   const [orders, setOrders] = useState<LabOrder[]>(mockLabOrders);
   const [search, setSearch] = useState("");
@@ -85,7 +86,13 @@ export default function LabOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
   const [resultModal, setResultModal] = useState<LabOrder | null>(null);
   const [resultText, setResultText] = useState("");
-
+  const { data: labsData } = useFetchvisitlabordersQuery({
+    page: 1,
+    limit: 10000,
+    search: "",
+    status: "",
+  });
+  console.log(labsData);
   const stats = [
     { label: "Pending", value: orders.filter((o) => o.status === "pending").length, icon: Clock, color: "bg-warning/10 text-warning" },
     { label: "In Progress", value: orders.filter((o) => o.status === "in-progress").length, icon: Loader2, color: "bg-info/10 text-info" },

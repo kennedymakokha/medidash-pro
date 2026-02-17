@@ -12,7 +12,10 @@ export const patientApiSlice = apiSlice.injectEndpoints({
         }),
 
         fetchvisits: builder.query({
-            query: ({ page, limit, search }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}`
+            query: ({ page, limit, search,track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&track=${track}`
+        }),
+        fetchvisitlaborders: builder.query({
+            query: ({ page, limit, search }) => `${USER_URL}/lab-orders?page=${page}&limit=${limit}&search=${search}`
         }),
 
 
@@ -22,6 +25,7 @@ export const patientApiSlice = apiSlice.injectEndpoints({
 export const {
     useCreatevisitMutation,
     useFetchvisitsQuery,
+    useFetchvisitlabordersQuery
 
 
 } = patientApiSlice

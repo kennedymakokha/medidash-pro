@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 import {
   Dialog,
@@ -7,46 +7,42 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
 
-import { Patient } from '@/types/hospital';
-import { useCreatepatientMutation } from '@/features/patientSlice';
-import { generateUnifiedId } from '@/utils/culculateAge';
-import { useGetusersQuery } from '@/features/userSlice';
-import { Doctor } from '@/data/mockData';
+import { Patient } from "@/types/hospital";
+import { useGetusersQuery } from "@/features/userSlice";
+import { Doctor } from "@/data/mockData";
 
 interface PatientFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
   onSubmit: (patient: Patient) => void;
-  mode: 'add' | 'edit';
-  refetch?: () => Promise<void> | void;
-
+  mode: "add" | "edit";
 }
 
-const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-const statusOptions: Patient['status'][] = [
-  'outpatient',
-  'admitted',
-  'critical',
-  'discharged',
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const statusOptions: Patient["status"][] = [
+  "outpatient",
+  "admitted",
+  "critical",
+  "discharged",
 ];
 
 export function PatientFormModal({
@@ -54,111 +50,149 @@ export function PatientFormModal({
   onOpenChange,
   patient,
   onSubmit,
-  refetch,
   mode,
 }: PatientFormModalProps) {
   const [formData, setFormData] = useState({
-    uuid: generateUnifiedId('patient'),
-    name: '',
+    name: "",
     dob: null as Date | null,
-    sex: 'male' as 'male' | 'female' | 'other',
-    phone: '',
-    email: '',
-    address: '',
-    bloodgroup: 'A+',
-    status: 'outpatient' as Patient['status'],
-    assignedDoctor: '',
-    room: '',
-    nokName: "",
-    nokRelationship: "",
-    nokPhone: "",
+    sex: "male" as "male" | "female" | "other",
+    phone: "",
+    address: "",
+    bloodgroup: "A+",
+    status: "outpatient" as Patient["status"],
+    assignedDoctor: "",
+    room: "",
     nationalId: "",
-    admissionDate: ""
   });
-  const { data: users } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search: "" })
-  const doctors = users !== undefined ? users?.data : [];
+
+  const [scanning, setScanning] = useState(false);
+  const [fingerprintData, setFingerprintData] = useState<string | null>(null);
+
+  const { data: users } = useGetusersQuery({
+    role: "doctor",
+    limit: 10,
+    page: 1,
+    search: "",
+  });
+
+  const doctors = users?.data ?? [];
 
   useEffect(() => {
     if (!open) return;
 
-    if (patient && mode === 'edit') {
+    if (patient && mode === "edit") {
       setFormData({
-        uuid: patient.uuid,
-        name: patient.name ?? '',
+        name: patient.name ?? "",
         dob: patient.dob ? new Date(patient.dob) : null,
-        sex: (patient.sex ?? 'male').toLowerCase() as any,
-        phone: patient.phone ?? '',
-        email: patient.email ?? '',
-        address: patient.address ?? '',
-        bloodgroup: patient.bloodgroup ?? 'A+',
-        status: patient.status ?? 'outpatient',
-        assignedDoctor: (typeof patient.assignedDoctor === 'object' ? patient.assignedDoctor?.name : patient.assignedDoctor) ?? '',
-        room: patient.room ?? '',
-        nokName: patient.nokName ?? '',
-        nokPhone: patient.nokPhone ?? '',
-        nokRelationship: patient.nokRelationship ?? '',
-        nationalId: patient.nationalId ?? '',
-        admissionDate: patient.admissionDate ?? '',
-
+        sex: (patient.sex ?? "male") as any,
+        phone: patient.phone ?? "",
+        address: patient.address ?? "",
+        bloodgroup: patient.bloodgroup ?? "A+",
+        status: patient.status ?? "outpatient",
+        assignedDoctor:
+          typeof patient.assignedDoctor === "object"
+            ? patient.assignedDoctor?._id
+            : patient.assignedDoctor ?? "",
+        room: patient.room ?? "",
+        nationalId: patient.nationalId ?? "",
       });
     } else {
-      setFormData({
-        uuid: generateUnifiedId('patient'),
-        name: '',
-        dob: null,
-        sex: 'male',
-        phone: '',
-        email: '',
-        address: '',
-        bloodgroup: 'A+',
-        status: 'outpatient',
-        assignedDoctor: '',
-        room: '',
-        nokName: '',
-        nokPhone: '',
-        nokRelationship: '',
-        nationalId: "",
-        admissionDate: ""
-      });
+      resetForm();
     }
   }, [open, patient, mode]);
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   onSubmit({
-  //     ...formData, admissionDate:
-  //       formData.status === 'admitted' || formData.status === 'critical'
-  //         ? new Date().toISOString().split('T')[0]
-  //         : undefined,
-  //   });
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      dob: null,
+      sex: "male",
+      phone: "",
+      address: "",
+      bloodgroup: "A+",
+      status: "outpatient",
+      assignedDoctor: "",
+      room: "",
+      nationalId: "",
+    });
+    setFingerprintData(null);
+  };
 
-  //   onOpenChange(false);
+  const scanFingerprint = async () => {
+    try {
+      setScanning(true);
 
-  // };
+      const response = await fetch("http://localhost:3000/scan", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Scan failed");
+      }
+
+      setFingerprintData(data.output);
+    } catch (error) {
+      console.error(error);
+      alert("Fingerprint scan failed");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
-    console.log(formData)
     e.preventDefault();
+
     const patientData = {
       ...formData,
-      dob: formData.dob ? formData.dob.toISOString().split('T')[0] : '',
-      visits: []
+      dob: formData.dob
+        ? formData.dob.toISOString().split("T")[0]
+        : "",
+      fingerprint: fingerprintData, // optional save
+      visits: [],
     } as Patient;
+
     onSubmit(patientData);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto ">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'add' ? 'Add New Patient' : 'Edit Patient'}
+            {mode === "add" ? "Add New Patient" : "Edit Patient"}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Fingerprint Section */}
+          <div className="bg-muted/40 p-4 rounded-lg border space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="font-semibold">
+                Biometric Registration
+              </Label>
+
+              <Button
+                type="button"
+                onClick={scanFingerprint}
+                disabled={scanning}
+              >
+                {scanning ? "Scanning..." : "Scan Fingerprint"}
+              </Button>
+            </div>
+
+            {fingerprintData && (
+              <div className="text-xs bg-background p-2 rounded border max-h-32 overflow-auto">
+                <pre>{fingerprintData}</pre>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            {/* Name */}
+
+            {/* Full Name */}
             <div className="col-span-2">
               <Label>Full Name</Label>
               <Input
@@ -170,21 +204,22 @@ export function PatientFormModal({
               />
             </div>
 
-            {/* DOB Date Picker */}
+            {/* Date of Birth */}
             <div>
               <Label>Date of Birth</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left"
                   >
                     {formData.dob
-                      ? format(formData.dob, 'PPP')
-                      : 'Pick a date'}
+                      ? format(formData.dob, "PPP")
+                      : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0">
+                <PopoverContent className="p-0 w-auto">
                   <Calendar
                     mode="single"
                     selected={formData.dob ?? undefined}
@@ -194,29 +229,8 @@ export function PatientFormModal({
                     captionLayout="dropdown"
                     fromYear={1900}
                     toYear={new Date().getFullYear()}
-                    disabled={(date) => date > new Date()}
-                    className="rounded-lg border shadow-sm p-3"
-                    classNames={{
-                      caption: 'flex justify-center gap-2 mb-2',
-                      caption_label: 'hidden',
-                      dropdown:
-                        'px-2 py-1 rounded-md border bg-background text-sm',
-                      nav: 'space-x-1',
-                      nav_button:
-                        'h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground',
-                      table: 'w-full border-collapse space-y-1',
-                      head_cell:
-                        'text-muted-foreground font-medium text-xs',
-                      cell:
-                        'h-9 w-9 text-center text-sm rounded-md hover:bg-accent',
-                      day_selected:
-                        'bg-primary text-primary-foreground hover:bg-primary',
-                      day_today:
-                        'border border-primary text-primary',
-                    }}
                     initialFocus
                   />
-
                 </PopoverContent>
               </Popover>
             </div>
@@ -274,7 +288,9 @@ export function PatientFormModal({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+
+            {/* Address */}
+            <div className="col-span-2">
               <Label>Address</Label>
               <Input
                 value={formData.address}
@@ -285,58 +301,25 @@ export function PatientFormModal({
               />
             </div>
 
-            {/* Blood Group */}
+            {/* National ID */}
             <div>
               <Label>National ID</Label>
               <Input
                 value={formData.nationalId}
                 onChange={(e) =>
                   setFormData({ ...formData, nationalId: e.target.value })
-                } />
-            </div>
-
-            {/* Status */}
-            <div>
-              <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value as Patient['status'] })
                 }
-              >
-
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status} className="capitalize">
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Room */}
-            <div>
-              <Label>Room</Label>
-              <Input
-                value={formData.room}
-                onChange={(e) =>
-                  setFormData({ ...formData, room: e.target.value })
-                }
-                placeholder="Room 201"
               />
             </div>
 
-            {/* Doctor */}
-
-            <div className="col-span-2">
+            {/* Assigned Doctor */}
+            <div>
               <Label>Assigned Doctor</Label>
               <Select
                 value={formData.assignedDoctor}
-                onValueChange={(value) => setFormData({ ...formData, assignedDoctor: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, assignedDoctor: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Doctor" />
@@ -351,49 +334,16 @@ export function PatientFormModal({
               </Select>
             </div>
 
-            {/* Next of Kin */}
-            <div className="col-span-2 pt-4 border-t">
-              <Label className="text-sm font-semibold text-muted-foreground">
-                Next of Kin
-              </Label>
-            </div>
-
+            {/* Room */}
             <div>
-              <Label>Name</Label>
+              <Label>Room</Label>
               <Input
-                value={formData.nokName}
+                value={formData.room}
                 onChange={(e) =>
-                  setFormData({ ...formData, nokName: e.target.value })
+                  setFormData({ ...formData, room: e.target.value })
                 }
-                placeholder="Full name"
               />
             </div>
-
-            <div>
-              <Label>Phone</Label>
-              <Input
-                value={formData.nokPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, nokPhone: e.target.value })
-                }
-                placeholder="+1 234 567 890"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Label>Relationship</Label>
-              <Input
-                value={formData.nokRelationship}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    nokRelationship: e.target.value,
-                  })
-                }
-                placeholder="Spouse, Brother, Parent"
-              />
-            </div>
-
           </div>
 
           <DialogFooter>
@@ -404,8 +354,9 @@ export function PatientFormModal({
             >
               Cancel
             </Button>
+
             <Button type="submit">
-              {mode === 'add' ? 'Add Patient' : 'Save Changes'}
+              {mode === "add" ? "Add Patient" : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

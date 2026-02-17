@@ -16,6 +16,8 @@ import { toast } from "@/hooks/use-toast";
 import { DataTable } from "@/components/table/DataTable";
 import { LabFormModal } from "@/components/modals/LabTestForm";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { generateUnifiedId } from "@/utils/culculateAge";
+import { MockLabTests } from "@/data/mockData";
 
 interface LabTableProps {
   filteredTests: LabTest[];
@@ -65,6 +67,7 @@ export function LabTable({
     other: "bg-muted text-muted-foreground",
   };
   const addLab = async (Data: LabTest) => {
+
     await postLab(Data).unwrap();
     await refetch();
     toast({
@@ -72,6 +75,12 @@ export function LabTable({
       description: `${Data.testName} ${Data.uuid ? "has been Updated" : "has been added"} successfully.`,
     });
   };
+  // const addLab = async (Data: LabTest) => {
+  //   for (let index = 0; index < MockLabTests.length; index++) {
+  //     const element = MockLabTests[index];
+  //     await postLab(element).unwrap();
+  //   }
+  // };
   return (
     <TabsContent value="tests">
       <DataTable

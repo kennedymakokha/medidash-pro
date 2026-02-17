@@ -80,7 +80,7 @@ export default function FinancePage() {
     search: debouncedSearch,
   });
   const invoices = data !== undefined ? data.data : [];
-  console.log(invoices);
+
   const totalRevenue = invoices
     .filter((i) => i.status === "paid")
     .reduce((s, i) => s + i.total, 0);
@@ -98,51 +98,57 @@ export default function FinancePage() {
     const matchStatus = statusFilter === "all" || inv?.status === statusFilter;
     return matchSearch && matchStatus;
   });
-
+ 
   const handleMarkPaid = async () => {
     if (!payModalInvoice) return;
 
-    const payload = {
+    const track = payModalInvoice?.patientId?.track;
+
+    const trackMap: Record<string, { field: string; next: string }> = {
+      lab_billing: {
+        field: "labFeepaidAt",
+        next: "lab",
+      },
+      reg_billing: {
+        field: "consultationFeepaidAt",
+        next: "triage",
+      },
+      med_billing: {
+        field: "medFeepaidAt",
+        next: "pharmacy",
+      },
+    };
+
+    const config = trackMap[track];
+
+    if (!config) return;
+
+    const payload: any = {
       uuid: payModalInvoice.uuid,
       patientId: payModalInvoice.patientId._id,
       visitId: payModalInvoice.visitId._id,
+      status: "paid",
+      track: config.next,
+      [config.field]: new Date(), // dynamic field assignment
     };
-    if (payModalInvoice?.patientId?.track === "lab_billing") {
-      ((payload.labFeepaidAt = Date()),
-        (payload.status = "paid"),
-        (payload.track = "lab"));
-    } else if (payModalInvoice?.patientId?.track === "reg_billing") {
-      payload.consultationFeepaidAt = Date();
-      ((payload.status = "paid"), (payload.track = "pre-lab"));
-    } else {
-      payload.medFeepaidAt = Date();
-      ((payload.status = "paid"), (payload.track = "pharmercy"));
+
+    try {
+      await postPayment(payload).unwrap();
+      await refetch();
+
+      toast({
+        title: "Payment Successful",
+        description: "Payment has been made successfully.",
+      });
+
+      setPayModalInvoice(null);
+    } catch (error) {
+      toast({
+        title: "Payment Failed",
+        description: "Something went wrong while processing payment.",
+        variant: "destructive",
+      });
     }
-    await postPayment(payload).unwrap();
-    console.log(payload);
-    await refetch();
-    toast({
-      title: "Doctor Added",
-      description: `Payment  has been made successfully.`,
-    });
-    //  {payModalInvoice?.patientId?.track === "lab_billing"
-    //                   ? "Lab Tests payments"
-    //                   : payModalInvoice?.patientId?.track === "reg_billing"
-    //                     ? "Registration"
-    //                     : "Medication"}{" "}
-    // setInvoices((prev) =>
-    //   prev.map((inv) =>
-    //     inv?.id === payModalInvoice.id
-    //       ? {
-    //           ...inv,
-    //           status: "paid" as const,
-    //           paymentMethod: paymentMethod as Invoice["paymentMethod"],
-    //           paidAt: new Date().toISOString(),
-    //         }
-    //       : inv,
-    //   ),
-    // );
-    setPayModalInvoice(null);
   };
 
   const stats = [
@@ -171,7 +177,21 @@ export default function FinancePage() {
       color: "bg-primary/10 text-primary",
     },
   ];
+  const VAT_RATE = 0.16;
 
+  const items = selectedInvoice?.visitId?.prescribedTests ?? [];
+
+  const subtotal = items.reduce((sum, item) => {
+    const price = parseFloat(item.price);
+    return sum + (isNaN(price) ? 0 : price);
+  }, 0);
+
+  const vat = subtotal * VAT_RATE;
+  const total = subtotal + vat;
+  for (let index = 0; index < filtered.length; index++) {
+    const element = filtered[index];
+    console.log(element?.patientId?.track);
+  }
   return (
     <DashboardLayout
       title="Finance & Billing"
@@ -262,15 +282,42 @@ export default function FinancePage() {
                         <TableCell className="hidden sm:table-cell text-sm">
                           {inv?.patientId?.track === "reg_billing"
                             ? "Consultation Fee"
-                            : inv.track === "lab_billing"
-                              ? `${inv?.visitId[0]?.prescribedTests?.length ?? 0} items`
+                            : inv?.patientId?.track === "lab_billing"
+                              ? `${inv?.visitId?.prescribedTests?.length ?? 0} lab test items`
                               : ""}
                         </TableCell>
                         <TableCell className="font-semibold">
-                          {inv?.patientId?.track === "reg_billing"
-                            ? inv?.consultationFee
-                            : inv?.total?.toLocaleString()}
+                          {(() => {
+                            if (inv?.patientId?.track === "reg_billing") {
+                              return inv?.consultationFee?.toLocaleString();
+                            }
+
+                            const tests = inv?.visitId?.prescribedTests ?? [];
+                            const medications = inv?.visitId?.medications ?? [];
+
+                            const testsTotal = tests.reduce((sum, item) => {
+                              return sum + Number(item.price || 0);
+                            }, 0);
+
+                            const medsTotal = medications.reduce(
+                              (sum, item) => {
+                                return sum + Number(item.price || 0);
+                              },
+                              0,
+                            );
+
+                            if (inv?.patientId?.track === "lab_billing") {
+                              return testsTotal.toLocaleString();
+                            }
+
+                            if (inv?.patientId?.track === "med_billing") {
+                              return (testsTotal + medsTotal).toLocaleString();
+                            }
+
+                            return inv?.total?.toLocaleString() || "";
+                          })()}
                         </TableCell>
+
                         <TableCell>
                           <Badge className={statusStyles[inv?.status]}>
                             {inv?.status}
@@ -314,7 +361,7 @@ export default function FinancePage() {
         >
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Invoice {selectedInvoice?._id}</DialogTitle>
+              <DialogTitle>{selectedInvoice?.uuid}</DialogTitle>
             </DialogHeader>
             {selectedInvoice && (
               <div className="space-y-4">
@@ -334,40 +381,41 @@ export default function FinancePage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Item</TableHead>
-                      <TableHead className="text-center">Qty</TableHead>
+
                       <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedInvoice.items.map((item, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <p className="text-sm">{item.description}</p>
-                          <Badge variant="outline" className="text-xs mt-0.5">
-                            {item.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {item.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          Ksh{item.unitPrice}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          Ksh{item.total}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {selectedInvoice?.visitId?.prescribedTests?.map(
+                      (item, i) => (
+                        <TableRow key={i}>
+                          <TableCell>
+                            <p className="text-sm">{item.description}</p>
+                            <Badge variant="outline" className="text-xs mt-0.5">
+                              {item.testName}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="text-right">
+                            {item.price}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </TableBody>
                 </Table>
 
                 <div className="border-t pt-3 space-y-1 text-right">
                   <p className="text-sm text-muted-foreground">
-                    Subtotal: Ksh{selectedInvoice.subtotal}
+                    Subtotal: Ksh{subtotal?.toFixed(2)}
                   </p>
+
+                  <p className="text-sm text-muted-foreground">
+                    VAT (16%): Ksh{vat?.toFixed(2)}
+                  </p>
+
                   <p className="text-lg font-bold">
-                    Total: Ksh{selectedInvoice.total}
+                    Total: Ksh{total?.toFixed(2)}
                   </p>
                 </div>
 

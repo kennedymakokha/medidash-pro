@@ -12,15 +12,18 @@ export const paymentApiSlice = apiSlice.injectEndpoints({
         }),
 
         fetchpayments: builder.query({
-            query: ({ page, limit, search }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}`
+            query: ({ page, limit, search,track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&track=${track}`
         }),
-      
 
+        fetchmonthlysum: builder.query({
+            query: ({ page, limit, search }) => `${USER_URL}/monthly-payments`
+        }),
     })
 })
 
 export const {
     useCreatepaymentMutation,
     useFetchpaymentsQuery,
+    useFetchmonthlysumQuery
 
 } = paymentApiSlice
