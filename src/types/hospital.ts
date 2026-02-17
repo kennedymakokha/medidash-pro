@@ -1,7 +1,8 @@
 export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist';
 
 export interface User {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
   role: UserRole;
@@ -38,7 +39,7 @@ export interface Visit {
   visitDate: string | null;
   createdAt: string;
   bp?: string;
-  assignedDoctor?:User;
+  assignedDoctor?: User;
   pulse?: string;
   temperature?: string;
   respiratoryRate?: string;
@@ -48,6 +49,7 @@ export interface Visit {
   created_by?: { name: string };
   labOrders?: string;
 }
+
 export interface Appointment {
   id: string;
   patientId: string;
@@ -95,7 +97,7 @@ export interface Department {
 
 export interface VitalRecord {
   id: string;
-  uuid?: string,
+  uuid?: string;
   patientId: string;
   patientName: string;
   recordedAt: string;
@@ -109,17 +111,18 @@ export interface VitalRecord {
   weight?: number;
   height?: number;
   notes?: string;
+  vitalsNurseId?: { name: string; _id?: string };
 }
 
 
 export interface BedData {
   id?: string;
-  bedNumber?:string
+  bedNumber?: string
   uuid: string;
   ward: string;
   status?: 'available' | 'occupied' | 'maintenance' | 'reserved';
-  
 }
+
 export interface WardData {
   _id?: string;
   wardName: string;
@@ -127,5 +130,4 @@ export interface WardData {
   type: 'general' | 'icu' | 'private' | 'semi-private';
   gender: 'female' | 'male';
   status: 'available' | 'occupied' | 'maintenance' | 'reserved';
-
 }
