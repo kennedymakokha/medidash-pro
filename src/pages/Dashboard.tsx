@@ -260,7 +260,6 @@ console.log(monthly);
 
       {/* --- Modals --- */}
       <PatientFormModal
-        refetch={() => { refetch(); }}
         open={patientModalOpen}
         onOpenChange={setPatientModalOpen}
         mode="add"

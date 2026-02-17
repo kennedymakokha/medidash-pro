@@ -1,15 +1,39 @@
+export interface LabTestItem {
+  testName: string;
+  description: string;
+  price: string | number;
+}
+
+export interface Medication {
+  name: string;
+  price: string | number;
+}
+
+export interface InvoiceVisit {
+  _id: string;
+  prescribedTests?: LabTestItem[];
+  medications?: Medication[];
+}
+
+export interface InvoicePatient {
+  _id: string;
+  name: string;
+  track: string;
+}
+
 export interface Invoice {
-  id: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  items: InvoiceItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
+  _id: string;
+  uuid: string;
+  patientId: InvoicePatient;
+  visitId: InvoiceVisit;
+  createdAt: string;
   status: "pending" | "paid" | "overdue" | "cancelled";
   paymentMethod?: "cash" | "card" | "insurance" | "mobile";
-  paidAt?: string;
+  total: number;
+  consultationFee?: number;
+  labFee?: number;
+  medFee?: number;
+  name?: string;
 }
 
 export interface InvoiceItem {
