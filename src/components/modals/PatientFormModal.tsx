@@ -78,12 +78,13 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
       visits: [],
     } as unknown as Patient;
     onSubmit(patientData);
+    console.log(patientData);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Add New Patient" : "Edit Patient"}</DialogTitle>
         </DialogHeader>

@@ -1,112 +1,114 @@
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Search,
-  Plus,
-  Users,
-  UserCheck,
-  Filter,
-} from 'lucide-react';
-import { useGetusersQuery, usePostuserMutation } from '@/features/userSlice';
-import { useDebounce } from '@/hooks/use-debounce';
-import { StaffTable } from '@/components/dashboard/StaffTable';
-import { generateUnifiedId } from '@/utils/culculateAge';
-import { StatsGridSkeleton, TableSkeleton } from '@/components/loaders';
+} from "@/components/ui/dropdown-menu";
+import { Search, Plus, Users, UserCheck, Filter } from "lucide-react";
+import { useGetusersQuery, usePostuserMutation } from "@/features/userSlice";
+import { useDebounce } from "@/hooks/use-debounce";
+import { StaffTable } from "@/components/dashboard/StaffTable";
+import { generateUnifiedId } from "@/utils/culculateAge";
+import { StatsGridSkeleton, TableSkeleton } from "@/components/loaders";
+import { useFetchdepartmentsQuery } from "@/features/departmentSlice";
 
 interface Staff {
   id: string;
   name: string;
   email: string;
   phone: string;
-  role: 'nurse' | 'receptionist' | 'technician' | 'admin';
+  role: "nurse" | "receptionist" | "technician" | "admin";
   department: any;
-  status: 'active' | 'on-leave' | 'inactive';
+  status: "active" | "on-leave" | "inactive";
   joinDate: string;
 }
 
-
 const statusStyles = {
-  active: 'bg-success/10 text-success border-success/20',
-  'on-leave': 'bg-warning/10 text-warning border-warning/20',
-  inactive: 'bg-muted text-muted-foreground border-muted',
+  active: "bg-success/10 text-success border-success/20",
+  "on-leave": "bg-warning/10 text-warning border-warning/20",
+  inactive: "bg-muted text-muted-foreground border-muted",
 };
 
 const roleColors = {
-  nurse: 'bg-primary/10 text-primary',
-  receptionist: 'bg-accent text-accent-foreground',
-  technician: 'bg-warning/10 text-warning',
-  admin: 'bg-destructive/10 text-destructive',
+  nurse: "bg-primary/10 text-primary",
+  receptionist: "bg-accent text-accent-foreground",
+  technician: "bg-warning/10 text-warning",
+  admin: "bg-destructive/10 text-destructive",
 };
 
 export default function StaffPage() {
-
-
-
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 5;
   const debouncedSearch = useDebounce(search, 400);
-  const { data: users, refetch, isLoading } = useGetusersQuery({ role: "", limit, page, search: debouncedSearch })
+  const {
+    data: users,
+    refetch,
+    isLoading,
+  } = useGetusersQuery({ role: "", limit, page, search: debouncedSearch });
   const [staff, setStaff] = useState<Staff[]>([]);
-
-  const staffmembers = users !== undefined ? users.data : []
-
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const { data } = useFetchdepartmentsQuery({});
+  const staffmembers = users !== undefined ? users.data : [];
+  console.log(data);
+  const departments = data?.data ?? [];
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editStaff, setEditStaff] = useState<Staff | null>(null);
   const [viewStaff, setViewStaff] = useState<Staff | null>(null);
   const [deleteStaff, setDeleteStaff] = useState<Staff | null>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'nurse' as Staff['role'],
+    name: "",
+    email: "",
+    phone: "",
+    role: "nurse" as Staff["role"],
     department: null as any,
-    status: 'active' as Staff['status'],
+    status: "active" as Staff["status"],
   });
 
-
-  const [postDoctor] = usePostuserMutation({})
+  const [postDoctor] = usePostuserMutation({});
 
   const handleSubmit = async () => {
     if (editStaff) {
-      await postDoctor(formData).unwrap()
-      await refetch()
-      toast({ title: 'Staff Updated', description: 'Staff member information has been updated.' });
+      await postDoctor(formData).unwrap();
+      await refetch();
+      toast({
+        title: "Staff Updated",
+        description: "Staff member information has been updated.",
+      });
       setEditStaff(null);
-    }
-    else {
-      await postDoctor({ ...formData, uuid: generateUnifiedId(`${formData.role}`) }).unwrap()
-      await refetch()
-      toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
+    } else {
+      await postDoctor({
+        ...formData,
+      }).unwrap();
+      await refetch();
+      toast({
+        title: "Staff Added",
+        description: `${formData.name} has been added successfully.`,
+      });
       setAddModalOpen(false);
     }
     // if (edit1Staff) {
@@ -124,13 +126,24 @@ export default function StaffPage() {
     //   toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
     //   setAddModalOpen(false);
     // }
-    setFormData({ name: '', email: '', phone: '', role: 'nurse', department: null, status: 'active' });
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      role: "nurse",
+      department: null,
+      status: "active",
+    });
   };
 
   const handleDelete = () => {
     if (!deleteStaff) return;
     setStaff(staff.filter((s) => s.id !== deleteStaff.id));
-    toast({ title: 'Staff Removed', description: `${deleteStaff.name} has been removed.`, variant: 'destructive' });
+    toast({
+      title: "Staff Removed",
+      description: `${deleteStaff.name} has been removed.`,
+      variant: "destructive",
+    });
     setDeleteStaff(null);
   };
 
@@ -148,9 +161,9 @@ export default function StaffPage() {
 
   const stats = {
     total: staffmembers.length,
-    active: staffmembers.filter((s) => s.status === 'active').length,
-    nurses: staffmembers.filter((s) => s.role === 'nurse').length,
-    onLeave: staffmembers.filter((s) => s.status === 'on-leave').length,
+    active: staffmembers.filter((s) => s.status === "active").length,
+    nurses: staffmembers.filter((s) => s.role === "nurse").length,
+    onLeave: staffmembers.filter((s) => s.status === "on-leave").length,
   };
 
   const isFormOpen = addModalOpen || !!editStaff;
@@ -173,15 +186,26 @@ export default function StaffPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">Role:</span> {roleFilter === 'all' ? 'All' : roleFilter}
+                <span className="hidden sm:inline">Role:</span>{" "}
+                {roleFilter === "all" ? "All" : roleFilter}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setRoleFilter('all')}>All</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter('nurse')}>Nurse</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter('receptionist')}>Receptionist</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter('technician')}>Technician</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setRoleFilter('admin')}>Admin</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("all")}>
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("nurse")}>
+                Nurse
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("receptionist")}>
+                Receptionist
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("technician")}>
+                Technician
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setRoleFilter("admin")}>
+                Admin
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -203,7 +227,9 @@ export default function StaffPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Staff</p>
-                <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
+                <p className="text-2xl font-bold text-card-foreground">
+                  {stats.total}
+                </p>
               </div>
             </div>
           </div>
@@ -214,7 +240,9 @@ export default function StaffPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold text-success">{stats.active}</p>
+                <p className="text-2xl font-bold text-success">
+                  {stats.active}
+                </p>
               </div>
             </div>
           </div>
@@ -225,7 +253,9 @@ export default function StaffPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Nurses</p>
-                <p className="text-2xl font-bold text-primary">{stats.nurses}</p>
+                <p className="text-2xl font-bold text-primary">
+                  {stats.nurses}
+                </p>
               </div>
             </div>
           </div>
@@ -236,7 +266,9 @@ export default function StaffPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">On Leave</p>
-                <p className="text-2xl font-bold text-warning">{stats.onLeave}</p>
+                <p className="text-2xl font-bold text-warning">
+                  {stats.onLeave}
+                </p>
               </div>
             </div>
           </div>
@@ -247,7 +279,8 @@ export default function StaffPage() {
         <TableSkeleton rows={5} columns={6} />
       ) : (
         <StaffTable
-          staff={staffmembers} title="Staff table"
+          staff={staffmembers}
+          title="Staff table"
           search={search}
           statusStyles={statusStyles}
           onSearchChange={(value) => {
@@ -264,17 +297,29 @@ export default function StaffPage() {
       )}
 
       {/* Add/Edit Modal */}
-      <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) { setAddModalOpen(false); setEditStaff(null); } }}>
+      <Dialog
+        open={isFormOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAddModalOpen(false);
+            setEditStaff(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editStaff ? 'Edit Staff' : 'Add New Staff'}</DialogTitle>
+            <DialogTitle>
+              {editStaff ? "Edit Staff" : "Add New Staff"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Full Name</Label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Enter full name"
               />
             </div>
@@ -284,7 +329,9 @@ export default function StaffPage() {
                 <Input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="Email address"
                 />
               </div>
@@ -292,7 +339,9 @@ export default function StaffPage() {
                 <Label>Phone</Label>
                 <Input
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   placeholder="Phone number"
                 />
               </div>
@@ -300,8 +349,15 @@ export default function StaffPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Role</Label>
-                <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v as Staff['role'] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={formData.role}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, role: v as Staff["role"] })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nurse">Nurse</SelectItem>
                     <SelectItem value="receptionist">Receptionist</SelectItem>
@@ -312,8 +368,15 @@ export default function StaffPage() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as Staff['status'] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={formData.status}
+                  onValueChange={(v) =>
+                    setFormData({ ...formData, status: v as Staff["status"] })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="on-leave">On Leave</SelectItem>
@@ -324,26 +387,54 @@ export default function StaffPage() {
             </div>
             <div className="space-y-2">
               <Label>Department</Label>
-              <Input
-                value={formData?.department?._id || formData?.department || ''}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              <Select
+                value={formData.department}
+                onValueChange={(e) =>
+                  setFormData({ ...formData, department: e })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments?.map((patient) => (
+                    <SelectItem key={patient._id} value={patient._id}>
+                      {patient.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* <Input
+                value={formData?.department?._id || formData?.department || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, department: e.target.value })
+                }
                 placeholder="Enter department"
-              />
+              /> */}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setAddModalOpen(false); setEditStaff(null); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAddModalOpen(false);
+                setEditStaff(null);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleSubmit}>
-              {editStaff ? 'Update' : 'Add Staff'}
+              {editStaff ? "Update" : "Add Staff"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* View Modal */}
-      <Dialog open={!!viewStaff} onOpenChange={(open) => !open && setViewStaff(null)}>
+      <Dialog
+        open={!!viewStaff}
+        onOpenChange={(open) => !open && setViewStaff(null)}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Staff Details</DialogTitle>
@@ -352,11 +443,17 @@ export default function StaffPage() {
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">{viewStaff.name.charAt(0)}</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {viewStaff.name.charAt(0)}
+                  </span>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">{viewStaff.name}</h3>
-                  <Badge className={cn('capitalize', roleColors[viewStaff.role])}>{viewStaff.role}</Badge>
+                  <Badge
+                    className={cn("capitalize", roleColors[viewStaff.role])}
+                  >
+                    {viewStaff.role}
+                  </Badge>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -374,8 +471,11 @@ export default function StaffPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Status</p>
-                  <Badge variant="outline" className={cn('capitalize', statusStyles[viewStaff.status])}>
-                    {viewStaff?.status?.replace('-', ' ')}
+                  <Badge
+                    variant="outline"
+                    className={cn("capitalize", statusStyles[viewStaff.status])}
+                  >
+                    {viewStaff?.status?.replace("-", " ")}
                   </Badge>
                 </div>
                 <div>

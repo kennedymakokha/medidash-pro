@@ -19,7 +19,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             <Users className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-card-foreground">{department.staffCount}</p>
+            <p className="text-sm font-semibold text-card-foreground">{department?.staffs?.length}</p>
             <p className="text-xs text-muted-foreground">Staff</p>
           </div>
         </div>
@@ -28,7 +28,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             <UserCheck className="w-3.5 h-3.5 text-success" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-card-foreground">{department.patientCount}</p>
+            <p className="text-sm font-semibold text-card-foreground">{department?.patients?.length}</p>
             <p className="text-xs text-muted-foreground">Patients</p>
           </div>
         </div>

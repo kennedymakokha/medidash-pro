@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Patient } from "@/types/hospital";
 import VisitsAccordion from "../patients/visitAccodion";
 import Info from "../patients/infoCard";
+import calculateAge from "@/utils/culculateAge";
 
 const statusStyles = {
   admitted: "bg-info/10 text-info border-info/20",
@@ -68,7 +69,7 @@ export function ViewPatientModal({
             <div>
               <h3 className="text-lg font-semibold">{patient.name}</h3>
               <p className="text-sm text-muted-foreground">
-                {patient?.age} years, {patient.sex || "N/A"}
+                {calculateAge(patient?.dob)} years, {patient.sex || "N/A"}
               </p>
               <Badge
                 variant="outline"
@@ -110,8 +111,13 @@ export function ViewPatientModal({
           {/* ================= PATIENT DETAILS (hidden when visits open) ================= */}
           {!showVisits && (
             <>
+            
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Info icon={<Phone />} label="Phone" value={patient.phone} />
+                <Info
+                  icon={<Phone />}
+                  label={patient.phone ? "Phone" : "Guardian's phone "}
+                  value={patient.phone ||patient.guardianphone}
+                />
                 <Info icon={<Mail />} label="Email" value={patient.email} />
                 <Info
                   icon={<MapPin />}
@@ -128,7 +134,11 @@ export function ViewPatientModal({
                   <Info
                     icon={<Stethoscope />}
                     label="Doctor"
-                    value={typeof patient.assignedDoctor === 'object' ? patient.assignedDoctor?.name || '' : patient.assignedDoctor || ''}
+                    value={
+                      typeof patient.visits[0].assignedDoctor === "object"
+                        ? patient.visits[0].assignedDoctor?.name || ""
+                        : patient.visits[0].assignedDoctor || ""
+                    }
                   />
                 )}
                 {patient.room && (
@@ -151,7 +161,7 @@ export function ViewPatientModal({
                 <Info icon={<Phone />} label="Phone" value={patient.nokPhone} />
 
                 <Info
-                  icon={<Users2Icon/>}
+                  icon={<Users2Icon />}
                   label="Relation"
                   value={patient.nokRelationship}
                   strong

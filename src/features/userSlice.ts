@@ -125,4 +125,19 @@ export const usersApiSlice = apiSlice.injectEndpoints({
     })
 })
 
-export const { useLoginMutation, useGetusersoverviewQuery, useFetch_countQuery, useEnrollUserMutation, usePost_guardianMutation, useUpdate_userMutation, useDelete_userMutation, useResetPassMutation, useRecoverPassMutation, useResendactivateMutation, useActivateMutation, useGetusersQuery, useEditUserDetailsMutation, useLogoutMutation, usePostuserMutation, useFetchuserQuery } = usersApiSlice
+export const { useLoginMutation,
+    useGetusersoverviewQuery,
+    useFetch_countQuery,
+    useEnrollUserMutation,
+    usePost_guardianMutation,
+    useUpdate_userMutation,
+    useDelete_userMutation,
+    useResetPassMutation,
+    useRecoverPassMutation,
+    useResendactivateMutation,
+    useActivateMutation,
+    useGetusersQuery,
+    useEditUserDetailsMutation,
+    useLogoutMutation,
+    usePostuserMutation,
+    useFetchuserQuery } = usersApiSlice

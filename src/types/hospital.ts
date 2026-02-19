@@ -20,6 +20,7 @@ export interface Patient {
   age?: number;
   sex?: 'male' | 'female' | 'other';
   phone: string;
+  guardianphone?:string
   email: string;
   address: string;
   bloodgroup: string;
