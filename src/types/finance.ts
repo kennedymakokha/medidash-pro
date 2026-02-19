@@ -26,6 +26,7 @@ export interface Invoice {
   uuid: string;
   patientId: InvoicePatient;
   visitId: InvoiceVisit;
+  track:string,
   createdAt: string;
   status: "pending" | "paid" | "overdue" | "cancelled";
   paymentMethod?: "cash" | "card" | "insurance" | "mobile";

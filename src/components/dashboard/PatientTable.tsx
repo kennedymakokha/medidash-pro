@@ -150,7 +150,7 @@ export function PatientTable({
               </Badge>
             </td>
             <td className="px-6 py-4">
-              {typeof patient?.assignedDoctor === 'object' ? patient?.assignedDoctor?.name : patient?.assignedDoctor || "-"}
+              {typeof patient?.visits[0]?.assignedDoctor === 'object' ? patient?.visits[0]?.assignedDoctor?.name : patient?.visits[0]?.assignedDoctor || "-"}
             </td>
             <td className="px-6 py-4 text-right">
               <DropdownMenu>

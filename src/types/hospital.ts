@@ -99,6 +99,7 @@ export interface VitalRecord {
   id: string;
   uuid?: string;
   patientId: string;
+  patientMongoose?:string,
   patientName: string;
   recordedAt: string;
   recordedBy: string;

@@ -10,6 +10,13 @@ export const patientApiSlice = apiSlice.injectEndpoints({
                 body: data
             })
         }),
+           updatelabtest: builder.mutation({
+            query: (data) => ({
+                url: `${USER_URL}/update-lab-order`,
+                method: "POST",
+                body: data
+            })
+        }),
 
         fetchvisits: builder.query({
             query: ({ page, limit, search,track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&track=${track}`
@@ -25,7 +32,9 @@ export const patientApiSlice = apiSlice.injectEndpoints({
 export const {
     useCreatevisitMutation,
     useFetchvisitsQuery,
-    useFetchvisitlabordersQuery
+    useFetchvisitlabordersQuery,
+    useUpdatelabtestMutation,
+    
 
 
 } = patientApiSlice

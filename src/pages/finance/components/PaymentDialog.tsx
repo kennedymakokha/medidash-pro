@@ -12,14 +12,14 @@ interface Props {
 }
 
 function resolveAmount(inv: Invoice): string | number {
-  const track = inv?.patientId?.track;
+  const track = inv?.track;
   if (track === "lab_billing") return inv?.labFee ?? 0;
   if (track === "reg_billing") return inv?.consultationFee ?? 0;
   return inv?.medFee ?? 0;
 }
 
 function resolveLabel(inv: Invoice): string {
-  const track = inv?.patientId?.track;
+  const track = inv?.track;
   if (track === "lab_billing") return "Lab Tests";
   if (track === "reg_billing") return "Registration";
   return "Medication";

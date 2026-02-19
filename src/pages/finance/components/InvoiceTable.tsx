@@ -37,7 +37,7 @@ function resolveTotal(inv: Invoice): string {
 }
 
 function resolveItems(inv: Invoice): string {
-  const track = inv?.patientId?.track;
+  const track = inv?.track;
   if (track === "reg_billing") return "Consultation Fee";
   if (track === "lab_billing") return `${inv?.visitId?.prescribedTests?.length ?? 0} lab test items`;
   return "";

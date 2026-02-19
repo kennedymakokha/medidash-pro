@@ -4,7 +4,10 @@ import { toast } from "@/hooks/use-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useFetchpatientsoverviewsQuery } from "@/features/patientSlice";
-import { useCreatevisitMutation, useFetchvisitsQuery } from "@/features/visitsSlice";
+import {
+  useCreatevisitMutation,
+  useFetchvisitsQuery,
+} from "@/features/visitsSlice";
 import { VitalsStats } from "./vitals/components/VitalsStats";
 import { VitalsTable } from "./vitals/components/VitalsTable";
 import { VitalsFormDialog } from "./vitals/components/VitalsFormDialog";
@@ -12,9 +15,18 @@ import { VitalsViewDialog } from "./vitals/components/VitalsViewDialog";
 import { VitalRecord } from "@/types/hospital";
 
 const defaultForm = {
-  uuid: "", patientId: "", temperature: "", bloodPressureSystolic: "",
-  bloodPressureDiastolic: "", heartRate: "", respiratoryRate: "",
-  oxygenSaturation: "", weight: "", height: "", notes: "",
+  uuid: "",
+  patientId: "",
+  patientMongoose:"",
+  temperature: "",
+  bloodPressureSystolic: "",
+  bloodPressureDiastolic: "",
+  heartRate: "",
+  respiratoryRate: "",
+  oxygenSaturation: "",
+  weight: "",
+  height: "",
+  notes: "",
 };
 
 export default function VitalsPage() {
@@ -27,12 +39,24 @@ export default function VitalsPage() {
   const [formData, setFormData] = useState(defaultForm);
 
   const [postVital] = useCreatevisitMutation({});
-  const { userInfo: { user } } = useSelector((state: RootState) => state.auth);
-  const { data, refetch } = useFetchvisitsQuery({ limit: 5, page, search: "", track: "triage" });
+  const {
+    userInfo: { user },
+  } = useSelector((state: RootState) => state.auth);
+  const { data, refetch } = useFetchvisitsQuery({
+    limit: 5,
+    page,
+    search: "",
+    track: "triage",
+  });
   const visits = data?.data ?? [];
 
   const handleRecord = (data: any) => {
-    setFormData({ ...defaultForm, uuid: data.uuid, patientId: data.patientMongoose?._id ?? "" });
+    setFormData({
+      ...defaultForm,
+      uuid: data.uuid,
+      patientId: data.patientMongoose?._id ?? "",
+      patientMongoose: data.patientMongoose?._id ?? "",
+    });
     setEditingVital(null);
     setIsFormOpen(true);
   };
@@ -42,6 +66,7 @@ export default function VitalsPage() {
     setFormData({
       uuid: vital.uuid ?? "",
       patientId: vital.patientId,
+        patientMongoose: vital.patientMongoose,
       temperature: vital.temperature.toString(),
       bloodPressureSystolic: vital.bloodPressureSystolic.toString(),
       bloodPressureDiastolic: vital.bloodPressureDiastolic.toString(),
@@ -56,22 +81,32 @@ export default function VitalsPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await postVital({
-      ...formData,
-      bp: `${formData.bloodPressureDiastolic}/${formData.bloodPressureSystolic}`,
-      bmi: `${parseInt(formData.weight) / parseInt(formData.height)}`,
-      vitalsNurseId: user?._id,
-      track: "pre-lab",
-    }).unwrap();
-    await refetch();
-    toast({ title: "Vitals Recorded", description: "Vital record saved successfully." });
-    setIsFormOpen(false);
-    setFormData(defaultForm);
+    try {
+      e.preventDefault();
+      await postVital({
+        ...formData,
+        bp: `${formData.bloodPressureDiastolic}/${formData.bloodPressureSystolic}`,
+        bmi: `${parseInt(formData.weight) / parseInt(formData.height)}`,
+        vitalsNurseId: user?._id,
+        track: "pre-lab",
+      }).unwrap();
+      await refetch();
+      toast({
+        title: "Vitals Recorded",
+        description: "Vital record saved successfully.",
+      });
+      setIsFormOpen(false);
+      setFormData(defaultForm);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
-    <DashboardLayout title="Vitals" subtitle="Monitor and record patient vital signs">
+    <DashboardLayout
+      title="Vitals"
+      subtitle="Monitor and record patient vital signs"
+    >
       <div className="space-y-6">
         <VitalsStats vitals={[]} />
         <VitalsTable
@@ -79,7 +114,10 @@ export default function VitalsPage() {
           search={searchQuery}
           onSearchChange={setSearchQuery}
           onRecord={handleRecord}
-          onView={(v) => { setViewingVital(v); setIsViewOpen(true); }}
+          onView={(v) => {
+            setViewingVital(v);
+            setIsViewOpen(true);
+          }}
           onEdit={handleEdit}
         />
       </div>
@@ -91,7 +129,13 @@ export default function VitalsPage() {
         onSubmit={handleSubmit}
         isEditing={!!editingVital}
       />
-      <VitalsViewDialog vital={viewingVital} onClose={() => { setIsViewOpen(false); setViewingVital(null); }} />
+      <VitalsViewDialog
+        vital={viewingVital}
+        onClose={() => {
+          setIsViewOpen(false);
+          setViewingVital(null);
+        }}
+      />
     </DashboardLayout>
   );
 }

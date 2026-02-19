@@ -35,18 +35,18 @@ export default function ConsultationsPage() {
     chiefComplaint: "",
     uuid: "",
     patientId: "",
+    visitId:"",
     patientMongoose: "",
     orderedBy: "",
     symptoms: "",
     prescribedTests: [] as LabTest[],
     notes: "",
-    visitId: "",
     orderedAt: Date(),
   };
   const [formData, setFormData] = useState(intittialFormData);
 
   const handleOpenAddModal = (data: Consultation) => {
-    console.log(data, data.visits);
+  
     setFormData({
       uuid: data?.visits?.[0]?.uuid,
       patientId: data?.visits?.[0]?.patientMongoose,
