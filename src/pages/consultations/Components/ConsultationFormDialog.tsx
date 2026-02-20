@@ -178,7 +178,7 @@ export function ConsultationFormDialog({
             </Popover>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Total Lab Fee: <b>${totalFee}</b>
+              Total Lab Fee: <b>Ksh  {totalFee}</b>
             </p>
           </div>
 

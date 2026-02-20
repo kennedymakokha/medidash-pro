@@ -72,7 +72,7 @@ export default function StaffPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const { data } = useFetchdepartmentsQuery({});
   const staffmembers = users !== undefined ? users.data : [];
-  console.log(data);
+
   const departments = data?.data ?? [];
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -394,23 +394,17 @@ export default function StaffPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select patient" />
+                  <SelectValue placeholder="Select dept" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments?.map((patient) => (
-                    <SelectItem key={patient._id} value={patient._id}>
-                      {patient.name}
+                  {departments?.map((dept) => (
+                    <SelectItem key={dept._id} value={dept._id}>
+                      {dept.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {/* <Input
-                value={formData?.department?._id || formData?.department || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, department: e.target.value })
-                }
-                placeholder="Enter department"
-              /> */}
+             
             </div>
           </div>
           <DialogFooter>
