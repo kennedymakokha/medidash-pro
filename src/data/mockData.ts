@@ -248,7 +248,7 @@ export interface Doctor {
   avatar?: string;
   schedule?: string;
   role?: string
-  uuid: string,
+  uuid?: string,
 }
 
 export const mockDoctors: Doctor[] = [

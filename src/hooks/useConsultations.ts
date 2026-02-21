@@ -1,5 +1,5 @@
 import { useFetchpatientsQuery } from "@/features/patientSlice";
-import { useCreatevisitMutation } from "@/features/visitsSlice";
+import { useCreatevisitMutation, useFetchvisitsQuery } from "@/features/visitsSlice";
 import { useState } from "react";
 import { useDebounce } from "./use-debounce";
 
@@ -11,7 +11,7 @@ export function useConsultations() {
 
   const debouncedSearch = useDebounce(search, 400);
 
-  const query = useFetchpatientsQuery({
+  const query = useFetchvisitsQuery({
     page,
     limit: 5,
     search: debouncedSearch,

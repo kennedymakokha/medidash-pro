@@ -11,7 +11,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
       <h4 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
         {department.name}
       </h4>
-      <p className="text-sm text-muted-foreground mt-1">{department.head}</p>
+      <p className="text-sm text-muted-foreground mt-1">{department?.head?.name}</p>
       
       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
         <div className="flex items-center gap-2">

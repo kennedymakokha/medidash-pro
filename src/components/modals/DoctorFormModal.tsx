@@ -53,7 +53,7 @@ export function DoctorFormModal({
   mode,
 }: DoctorFormModalProps) {
   const [formData, setFormData] = useState({
-    uuid: generateUnifiedId('doctor'),
+    uuid: undefined,
     name: '',
     email: '',
     phone_number: '',
@@ -85,7 +85,7 @@ export function DoctorFormModal({
       });
     } else {
       setFormData({
-        uuid: generateUnifiedId('doctor'),
+        uuid:undefined,
         name: '',
         email: '',
         phone_number: '',
@@ -178,7 +178,7 @@ export function DoctorFormModal({
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((dept) => (
+                  {departments?.map((dept) => (
                     <SelectItem key={dept._id} value={dept._id}>
                       {dept.name}
                     </SelectItem>

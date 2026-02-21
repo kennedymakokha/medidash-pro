@@ -11,7 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -21,6 +25,7 @@ import {
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
 import { Consultation, LabTest } from "@/types/billing";
+import { useFetchlabOrdersForAVisitQuery } from "@/features/visitsSlice";
 
 export type ConsultationFormData = {
   uuid: string;
@@ -37,8 +42,8 @@ type Props = {
   onClose: () => void;
   initialData?: ConsultationFormData | null;
   labTests: LabTest[];
+  VisitTests: LabTest[];
   onSubmit: (data: ConsultationFormData, totalFee: number) => Promise<void>;
- 
 };
 
 export function ConsultationFormDialog({
@@ -46,15 +51,15 @@ export function ConsultationFormDialog({
   onClose,
   initialData,
   labTests,
+  VisitTests,
   onSubmit,
-  
 }: Props) {
   const [formData, setFormData] = useState<ConsultationFormData>({
     uuid: "",
     chiefComplaint: "",
     symptoms: "",
     prescribedTests: [],
-    
+
     notes: "",
   });
 
@@ -85,10 +90,11 @@ export function ConsultationFormDialog({
     await onSubmit(formData, totalFee);
     onClose();
   };
-
-  console.log(formData);
+  console.log(VisitTests);
   return (
     <Dialog open={open} onOpenChange={onClose}>
+         
+
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -97,17 +103,19 @@ export function ConsultationFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Chief Complaint</Label>
-            <Textarea
-              value={formData.chiefComplaint}
-              onChange={(e) =>
-                setFormData({ ...formData, chiefComplaint: e.target.value })
-              }
-              required
-            />
-          </div>
-
+          {
+            <div>
+              <Label>Chief Complaint</Label>
+              <Textarea
+                value={formData.chiefComplaint}
+                onChange={(e) =>
+                  setFormData({ ...formData, chiefComplaint: e.target.value })
+                }
+                required
+              />
+            </div>
+          }
+       
           <div>
             <Label>Symptoms</Label>
             <Input
@@ -178,7 +186,7 @@ export function ConsultationFormDialog({
             </Popover>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Total Lab Fee: <b>Ksh  {totalFee}</b>
+              Total Lab Fee: <b>Ksh {totalFee}</b>
             </p>
           </div>
 

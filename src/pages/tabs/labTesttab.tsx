@@ -66,21 +66,21 @@ export function LabTable({
     pathology: "bg-primary/10 text-primary",
     other: "bg-muted text-muted-foreground",
   };
-  const addLab = async (Data: LabTest) => {
-
-    await postLab(Data).unwrap();
-    await refetch();
-    toast({
-      title: `${Data.uuid !== undefined ? "Update Lab" : "Lab Added"}`,
-      description: `${Data.testName} ${Data.uuid ? "has been Updated" : "has been added"} successfully.`,
-    });
-  };
   // const addLab = async (Data: LabTest) => {
-  //   for (let index = 0; index < MockLabTests.length; index++) {
-  //     const element = MockLabTests[index];
-  //     await postLab(element).unwrap();
-  //   }
+
+  //   await postLab(Data).unwrap();
+  //   await refetch();
+  //   toast({
+  //     title: `${Data.uuid !== undefined ? "Update Lab" : "Lab Added"}`,
+  //     description: `${Data.testName} ${Data.uuid ? "has been Updated" : "has been added"} successfully.`,
+  //   });
   // };
+  const addLab = async (Data: LabTest) => {
+    for (let index = 0; index < MockLabTests.length; index++) {
+      const element = MockLabTests[index];
+      await postLab(element).unwrap();
+    }
+  };
   return (
     <TabsContent value="tests">
       <DataTable

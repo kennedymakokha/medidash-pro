@@ -8,7 +8,10 @@ import { useState } from "react";
 import { Consultation, LabTest } from "@/types/billing";
 import { useFetchlabsQuery } from "@/features/labTestSlice";
 import { toast } from "@/hooks/use-toast";
-import { useCreatevisitMutation } from "@/features/visitsSlice";
+import {
+  useCreatevisitMutation,
+  useFetchlabOrdersForAVisitQuery,
+} from "@/features/visitsSlice";
 import { ConsultationSkeleton } from "@/components/loaders";
 
 export default function ConsultationsPage() {
@@ -28,14 +31,16 @@ export default function ConsultationsPage() {
     search: "",
     status: "",
   });
+  let  vId = ''
   const labTests: LabTest[] = labsData?.data ?? [];
 
   const [postConsultation] = useCreatevisitMutation();
   const intittialFormData = {
     chiefComplaint: "",
+  
     uuid: "",
     patientId: "",
-    visitId:"",
+    visitId: "6999497219b19c52e5c82ef6",
     patientMongoose: "",
     orderedBy: "",
     symptoms: "",
@@ -44,15 +49,23 @@ export default function ConsultationsPage() {
     orderedAt: Date(),
   };
   const [formData, setFormData] = useState(intittialFormData);
-
-  const handleOpenAddModal = (data: Consultation) => {
-  
+  const { data:labTest, refetch:refetchLO } = useFetchlabOrdersForAVisitQuery({
+    id: vId,
+  });
+    const VisitTests: LabTest[] = labTest?.data ?? [];
+  const handleOpenAddModal = async(data: Consultation) => {
+   
+    if (data.track === "post-lab") {
+      vId = data._id
+     await refetchLO();
+      console.log(labTest);
+    }
     setFormData({
-      uuid: data?.visits?.[0]?.uuid,
-      patientId: data?.visits?.[0]?.patientMongoose,
-      visitId: data?.visits?.[0]?._id,
-      patientMongoose: data?.visits?.[0]?.patientMongoose,
-      orderedBy: data?.visits?.[0].assignedDoctor,
+      uuid: data?.uuid,
+      patientId: data?.patientMongoose,
+      visitId: data?._id,
+      patientMongoose: data?.patientMongoose,
+      orderedBy: data?.assignedDoctor,
       chiefComplaint: "",
       symptoms: "",
       prescribedTests: [],
@@ -94,6 +107,7 @@ export default function ConsultationsPage() {
         onClose={() => setIsFormModalOpen(false)}
         initialData={editingConsultation ? formData : null}
         labTests={labTests}
+        VisitTests={VisitTests}
         onSubmit={async (formPayload, totalFee) => {
           try {
             await postConsultation({

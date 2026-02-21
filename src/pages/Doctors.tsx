@@ -63,8 +63,11 @@ export default function DoctorsPage() {
   };
 
   const handleEditDoctor = async (doctorData: Doctor) => {
+    console.log(editDoctor);
+
     if (!editDoctor) return;
-    await postDoctor(doctorData).unwrap()
+
+    await postDoctor(editDoctor).unwrap()
     await refetch()
     toast({
       title: 'Doctor Updated',
@@ -232,14 +235,14 @@ export default function DoctorsPage() {
       {/* Modals */}
       <DoctorFormModal
         open={addModalOpen}
-        departments={depts ?? []}
+        departments={depts?.data ?? []}
         onOpenChange={setAddModalOpen}
         mode="add"
         onSubmit={handleAddDoctor}
       />
       <DoctorFormModal
         open={!!editDoctor}
-        departments={depts ?? []}
+        departments={depts?.data ?? []}
         onOpenChange={(open) => !open && setEditDoctor(null)}
         doctor={editDoctor}
         mode="edit"

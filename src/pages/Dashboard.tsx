@@ -59,7 +59,7 @@ function UnifiedDashboard() {
   });
 
 const {data:monthly}= useFetchmonthlysumQuery({})
-console.log(monthly);
+
   const patients = overview !== undefined ? overview.patients : []
 
   const [patientModalOpen, setPatientModalOpen] = useState(false);

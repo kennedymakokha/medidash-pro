@@ -24,6 +24,9 @@ export const patientApiSlice = apiSlice.injectEndpoints({
         fetchvisitlaborders: builder.query({
             query: ({ page, limit, search }) => `${USER_URL}/lab-orders?page=${page}&limit=${limit}&search=${search}`
         }),
+         fetchlabOrdersForAVisit: builder.query({
+            query: ({ page, limit, search ,id }) => `${USER_URL}/lab-orders/${id}?page=${page}&limit=${limit}&search=${search}`
+        }),
 
 
     })
@@ -34,6 +37,7 @@ export const {
     useFetchvisitsQuery,
     useFetchvisitlabordersQuery,
     useUpdatelabtestMutation,
+    useFetchlabOrdersForAVisitQuery
     
 
 

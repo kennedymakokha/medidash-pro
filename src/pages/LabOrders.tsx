@@ -147,7 +147,7 @@ export default function LabOrdersPage() {
       visitId: `${resultModal?.visitId?._id}`,
       testUuid: `${resultModal?.uuid}`,
       status: "completed",
-      result: resultText,
+      results: resultText,
       completedAt: new Date().toISOString(),
     });
     await refetch()
