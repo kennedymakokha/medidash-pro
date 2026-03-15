@@ -1,4 +1,4 @@
-import { User } from "./hospital";
+import { User, Visit } from "./hospital";
 
 export interface LabTest {
   id?: string;
@@ -29,10 +29,11 @@ export interface Procedure {
 
 export interface Consultation {
   id?: string;
+   _id?: string;
   uuid?:string
   patientId?: string;
   patientMongoose?:string;
-  visits?: any[]
+  visits?: Visit[]
   name?: string;
   doctorId?: string;
   doctorName?: string;

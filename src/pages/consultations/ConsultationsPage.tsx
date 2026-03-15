@@ -11,13 +11,23 @@ import { toast } from "@/hooks/use-toast";
 import {
   useCreatevisitMutation,
   useFetchlabOrdersForAVisitQuery,
+  useFetchvisitsQuery,
 } from "@/features/visitsSlice";
 import { ConsultationSkeleton } from "@/components/loaders";
+import { PostLabActionDialog } from "./Components/postlabModal";
 
 export default function ConsultationsPage() {
   const { data, isLoading, track, setTrack, refetch } = useConsultations();
   const consultations = data?.data ?? [];
 
+  const { data: consultationData } = useFetchvisitsQuery({
+    page: 1,
+    limit: 200000000,
+  });
+  console.log("CONXA", consultationData);
+  const [postLabModalOpen, setPostLabModalOpen] = useState(false);
+  const [postLabConsultation, setPostLabConsultation] =
+    useState<Consultation | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedConsultation, setSelectedConsultation] =
@@ -31,13 +41,13 @@ export default function ConsultationsPage() {
     search: "",
     status: "",
   });
-  let  vId = ''
+  let vId = "";
   const labTests: LabTest[] = labsData?.data ?? [];
 
   const [postConsultation] = useCreatevisitMutation();
   const intittialFormData = {
     chiefComplaint: "",
-  
+
     uuid: "",
     patientId: "",
     visitId: "6999497219b19c52e5c82ef6",
@@ -49,23 +59,26 @@ export default function ConsultationsPage() {
     orderedAt: Date(),
   };
   const [formData, setFormData] = useState(intittialFormData);
-  const { data:labTest, refetch:refetchLO } = useFetchlabOrdersForAVisitQuery({
-    id: vId,
-  });
-    const VisitTests: LabTest[] = labTest?.data ?? [];
-  const handleOpenAddModal = async(data: Consultation) => {
-   
+  const { data: labTest, refetch: refetchLO } = useFetchlabOrdersForAVisitQuery(
+    {
+      id: vId,
+    },
+  );
+  const VisitTests: LabTest[] = labTest?.data ?? [];
+  const handleOpenAddModal = async (data: Consultation) => {
     if (data.track === "post-lab") {
-      vId = data._id
-     await refetchLO();
-      console.log(labTest);
+      vId = data._id;
+      await refetchLO();
+      setPostLabConsultation(data);
+      setPostLabModalOpen(true);
+      return;
     }
     setFormData({
       uuid: data?.uuid,
       patientId: data?.patientMongoose,
       visitId: data?._id,
       patientMongoose: data?.patientMongoose,
-      orderedBy: data?.assignedDoctor,
+      orderedBy: data?.assignedDoctor?._id ?? "",
       chiefComplaint: "",
       symptoms: "",
       prescribedTests: [],
@@ -75,7 +88,23 @@ export default function ConsultationsPage() {
     setEditingConsultation(null);
     setIsFormModalOpen(true);
   };
+  const handleSendToWard = async (consultation: Consultation) => {
+    toast({
+      title: "Patient sent to ward",
+      description: "Ward admission initiated.",
+    });
 
+    setPostLabModalOpen(false);
+  };
+
+  const handleSendToPharmacy = async (consultation: Consultation) => {
+    toast({
+      title: "Patient sent to pharmacy",
+      description: "Medication billing started.",
+    });
+
+    setPostLabModalOpen(false);
+  };
   const handleView = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
     setIsViewModalOpen(true);
@@ -91,7 +120,7 @@ export default function ConsultationsPage() {
 
   return (
     <DashboardLayout title="Consultations">
-      <ConsultationStats consultations={consultations} />
+      <ConsultationStats consultations={consultationData?.data ?? []} />
 
       <ConsultationTabs
         consultations={consultations}
@@ -156,6 +185,13 @@ export default function ConsultationsPage() {
         open={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         consultation={selectedConsultation}
+      />
+      <PostLabActionDialog
+        open={postLabModalOpen}
+        onClose={() => setPostLabModalOpen(false)}
+        consultation={postLabConsultation}
+        onWard={handleSendToWard}
+        onPharmacy={handleSendToPharmacy}
       />
     </DashboardLayout>
   );

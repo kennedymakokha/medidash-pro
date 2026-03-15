@@ -19,6 +19,7 @@ import {
   Filter,
 } from "lucide-react";
 import {
+  useCreatepatientMutation,
   useFetchpatientsoverviewsQuery,
   useFetchpatientsQuery,
 } from "@/features/patientSlice";
@@ -28,30 +29,50 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { TableSkeleton, StatsGridSkeleton } from "@/components/loaders";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PatientFormModal } from "@/components/modals/PatientFormModal";
 
-
+import { toast } from "@/hooks/use-toast";
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+
+  const [patientModalOpen, setPatientModalOpen] = useState(false);
   const {
     userInfo: { user },
   } = useSelector((state: RootState) => state.auth);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [addModalOpen, setAddModalOpen] = useState(false)
-  const { data: patientsOverview, refetch: refetchOverview, isLoading: overviewLoading } =
-    useFetchpatientsoverviewsQuery({});
-  
-  const [limit,setLimit]=useState(10)
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
+ 
+  const {
+    data: patientsOverview,
+    refetch: refetchOverview,
+    isLoading: overviewLoading,
+  } = useFetchpatientsoverviewsQuery({});
+  const [postPatient] = useCreatepatientMutation({});
+  const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const role = user?.role;
   const debouncedSearch = useDebounce(search, 400);
-  const { data: patientsData, refetch, isLoading, isFetching } = useFetchpatientsQuery({
+  const {
+    data: patientsData,
+    refetch,
+    isLoading,
+    isFetching,
+  } = useFetchpatientsQuery({
     page,
     limit,
-    status:statusFilter,
+    status: statusFilter,
     search: debouncedSearch,
   });
-
+  const addPatient = async (Data: Patient) => {
+    await postPatient(Data).unwrap();
+    await refetch();
+    toast({
+      title: "Doctor Added",
+      description: `${Data.name} has been added successfully.`,
+    });
+    setPatientModalOpen(false);
+  };
 
   const allPatientsData =
     patientsOverview !== undefined ? patientsOverview.patients : [];
@@ -74,7 +95,6 @@ export default function PatientsPage() {
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
         <div className="flex flex-col sm:flex-row gap-3 flex-1">
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
@@ -102,7 +122,7 @@ export default function PatientsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => setAddModalOpen(true)} className="gap-2">
+        <Button onClick={() => setPatientModalOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Add</span> Patient
         </Button>
@@ -186,7 +206,7 @@ export default function PatientsPage() {
             setPage(1);
             setLimit(10000000);
           }}
-           viewPaginated={() => {
+          viewPaginated={() => {
             setPage(1);
             setLimit(10);
           }}
@@ -203,8 +223,12 @@ export default function PatientsPage() {
         />
       )}
 
-     
-    
+      <PatientFormModal
+        open={patientModalOpen}
+        onOpenChange={setPatientModalOpen}
+        mode="add"
+        onSubmit={addPatient}
+      />
     </DashboardLayout>
   );
 }

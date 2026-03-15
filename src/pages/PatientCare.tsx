@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Search,
   Heart,
@@ -18,34 +18,26 @@ import {
   AlertTriangle,
   Bed,
   Thermometer,
-} from 'lucide-react';
+} from "lucide-react";
+import { useFetchtasksQuery } from "@/features/patientsCareSlice";
 
 interface CareTask {
   id: string;
   patientName: string;
   room: string;
   task: string;
-  type: 'medication' | 'vitals' | 'care' | 'assessment';
-  priority: 'high' | 'medium' | 'low';
+  type: "medication" | "vitals" | "care" | "assessment";
+  priority: "high" | "medium" | "low";
   dueTime: string;
   completed: boolean;
 }
 
-const mockCareTasks: CareTask[] = [
-  { id: '1', patientName: 'John Smith', room: 'Room 201', task: 'Administer morning medication', type: 'medication', priority: 'high', dueTime: '08:00 AM', completed: false },
-  { id: '2', patientName: 'Robert Williams', room: 'ICU-3', task: 'Check vitals every 2 hours', type: 'vitals', priority: 'high', dueTime: '08:30 AM', completed: false },
-  { id: '3', patientName: 'David Brown', room: 'Room 305', task: 'Change wound dressing', type: 'care', priority: 'medium', dueTime: '09:00 AM', completed: true },
-  { id: '4', patientName: 'Mary Johnson', room: 'Room 102', task: 'Pain assessment', type: 'assessment', priority: 'medium', dueTime: '09:30 AM', completed: false },
-  { id: '5', patientName: 'John Smith', room: 'Room 201', task: 'Blood pressure check', type: 'vitals', priority: 'low', dueTime: '10:00 AM', completed: false },
-  { id: '6', patientName: 'Robert Williams', room: 'ICU-3', task: 'IV fluid replacement', type: 'medication', priority: 'high', dueTime: '10:30 AM', completed: false },
-  { id: '7', patientName: 'David Brown', room: 'Room 305', task: 'Assist with mobility exercises', type: 'care', priority: 'low', dueTime: '11:00 AM', completed: false },
-  { id: '8', patientName: 'Jennifer Davis', room: 'Room 203', task: 'Discharge paperwork review', type: 'assessment', priority: 'medium', dueTime: '11:30 AM', completed: true },
-];
+
 
 const priorityStyles = {
-  high: 'bg-destructive/10 text-destructive border-destructive/20',
-  medium: 'bg-warning/10 text-warning border-warning/20',
-  low: 'bg-success/10 text-success border-success/20',
+  high: "bg-destructive/10 text-destructive border-destructive/20",
+  medium: "bg-warning/10 text-warning border-warning/20",
+  low: "bg-success/10 text-success border-success/20",
 };
 
 const typeIcons = {
@@ -56,17 +48,23 @@ const typeIcons = {
 };
 
 const typeStyles = {
-  medication: 'bg-primary/10 text-primary',
-  vitals: 'bg-warning/10 text-warning',
-  care: 'bg-success/10 text-success',
-  assessment: 'bg-accent text-accent-foreground',
+  medication: "bg-primary/10 text-primary",
+  vitals: "bg-warning/10 text-warning",
+  care: "bg-success/10 text-success",
+  assessment: "bg-accent text-accent-foreground",
 };
 
 export default function PatientCarePage() {
-  const [tasks, setTasks] = useState<CareTask[]>(mockCareTasks);
-  const [search, setSearch] = useState('');
-  const [showCompleted, setShowCompleted] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [showCompleted, setShowCompleted] = useState(true);
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+
+  const { data } = useFetchtasksQuery({ page, limit, search: search });
+ 
+  const tasks = data?.data??[]
+  
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.patientName.toLowerCase().includes(search.toLowerCase()) ||
@@ -77,31 +75,37 @@ export default function PatientCarePage() {
   });
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
-    const task = tasks.find((t) => t.id === id);
-    if (task) {
-      toast({
-        title: task.completed ? 'Task Reopened' : 'Task Completed',
-        description: `${task.task} for ${task.patientName}`,
-      });
-    }
+    // setTasks(
+    //   tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    // );
+    // const task = tasks.find((t) => t.id === id);
+    // if (task) {
+    //   toast({
+    //     title: task.completed ? "Task Reopened" : "Task Completed",
+    //     description: `${task.task} for ${task.patientName}`,
+    //   });
+    // }
   };
 
   const stats = {
     total: tasks.length,
     pending: tasks.filter((t) => !t.completed).length,
     completed: tasks.filter((t) => t.completed).length,
-    highPriority: tasks.filter((t) => t.priority === 'high' && !t.completed).length,
+    highPriority: tasks.filter((t) => t.priority === "high" && !t.completed)
+      .length,
   };
 
   const groupedTasks = {
-    high: filteredTasks.filter((t) => t.priority === 'high'),
-    medium: filteredTasks.filter((t) => t.priority === 'medium'),
-    low: filteredTasks.filter((t) => t.priority === 'low'),
+    high: filteredTasks.filter((t) => t.priority === "high"),
+    medium: filteredTasks.filter((t) => t.priority === "medium"),
+    low: filteredTasks.filter((t) => t.priority === "low"),
   };
-
+ console.log(groupedTasks);
   return (
-    <DashboardLayout title="Patient Care" subtitle="Daily care tasks and patient rounds">
+    <DashboardLayout
+      title="Patient Care"
+      subtitle="Daily care tasks and patient rounds"
+    >
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
         <div className="relative flex-1 max-w-md">
@@ -119,7 +123,10 @@ export default function PatientCarePage() {
             checked={showCompleted}
             onCheckedChange={(checked) => setShowCompleted(!!checked)}
           />
-          <label htmlFor="showCompleted" className="text-sm text-muted-foreground cursor-pointer">
+          <label
+            htmlFor="showCompleted"
+            className="text-sm text-muted-foreground cursor-pointer"
+          >
             Show completed
           </label>
         </div>
@@ -134,7 +141,9 @@ export default function PatientCarePage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Tasks</p>
-              <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
+              <p className="text-2xl font-bold text-card-foreground">
+                {stats.total}
+              </p>
             </div>
           </div>
         </div>
@@ -156,7 +165,9 @@ export default function PatientCarePage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Completed</p>
-              <p className="text-2xl font-bold text-success">{stats.completed}</p>
+              <p className="text-2xl font-bold text-success">
+                {stats.completed}
+              </p>
             </div>
           </div>
         </div>
@@ -167,7 +178,9 @@ export default function PatientCarePage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">High Priority</p>
-              <p className="text-2xl font-bold text-destructive">{stats.highPriority}</p>
+              <p className="text-2xl font-bold text-destructive">
+                {stats.highPriority}
+              </p>
             </div>
           </div>
         </div>
@@ -175,29 +188,38 @@ export default function PatientCarePage() {
 
       {/* Tasks by Priority */}
       <div className="space-y-6">
-        {['high', 'medium', 'low'].map((priority) => {
-          const priorityTasks = groupedTasks[priority as keyof typeof groupedTasks];
+        {["high", "medium", "low"].map((priority) => {
+          const priorityTasks =
+            groupedTasks[priority as keyof typeof groupedTasks];
           if (priorityTasks.length === 0) return null;
 
           return (
             <div key={priority}>
               <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Badge variant="outline" className={cn('capitalize', priorityStyles[priority as keyof typeof priorityStyles])}>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "capitalize",
+                    priorityStyles[priority as keyof typeof priorityStyles],
+                  )}
+                >
                   {priority} Priority
                 </Badge>
-                <span className="text-muted-foreground text-sm">({priorityTasks.length})</span>
+                <span className="text-muted-foreground text-sm">
+                  ({priorityTasks.length})
+                </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {priorityTasks.map((task) => {
                   const Icon = typeIcons[task.type];
                   return (
                     <Card
-                      key={task.id}
+                      key={task._id}
                       className={cn(
                         "shadow-card hover:shadow-elevated transition-all cursor-pointer",
-                        task.completed && "opacity-60"
+                        task.completed && "opacity-60",
                       )}
-                      onClick={() => toggleTask(task.id)}
+                      onClick={() => toggleTask(task._id)}
                     >
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
@@ -206,16 +228,26 @@ export default function PatientCarePage() {
                               checked={task.completed}
                               className="mt-1"
                               onClick={(e) => e.stopPropagation()}
-                              onCheckedChange={() => toggleTask(task.id)}
+                              onCheckedChange={() => toggleTask(task._id)}
                             />
                             <div>
-                              <CardTitle className={cn("text-base", task.completed && "line-through")}>
+                              <CardTitle
+                                className={cn(
+                                  "text-base",
+                                  task.completed && "line-through",
+                                )}
+                              >
                                 {task.task}
                               </CardTitle>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge className={cn('text-xs', typeStyles[task.type])}>
-                                  <Icon className="w-3 h-3 mr-1" />
-                                  {task.type}
+                                <Badge
+                                  className={cn(
+                                    "text-xs",
+                                    typeStyles[task.type],
+                                  )}
+                                >
+                                  {/* <Icon className="w-3 h-3 mr-1" /> */}
+                                  {task.type??priority}
                                 </Badge>
                               </div>
                             </div>
@@ -239,7 +271,10 @@ export default function PatientCarePage() {
                             <span>{task.dueTime}</span>
                           </div>
                           {task.completed && (
-                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs">
+                            <Badge
+                              variant="outline"
+                              className="bg-success/10 text-success border-success/20 text-xs"
+                            >
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Done
                             </Badge>
@@ -258,8 +293,12 @@ export default function PatientCarePage() {
       {filteredTasks.length === 0 && (
         <div className="text-center py-12">
           <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground">No tasks found</h3>
-          <p className="text-sm text-muted-foreground">All caught up or try adjusting your search</p>
+          <h3 className="text-lg font-medium text-muted-foreground">
+            No tasks found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            All caught up or try adjusting your search
+          </p>
         </div>
       )}
     </DashboardLayout>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, Recycle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Patient } from "@/types/hospital";
 import { Badge } from "@/components/ui/badge";
@@ -150,7 +150,9 @@ export function PatientTable({
               </Badge>
             </td>
             <td className="px-6 py-4">
-              {typeof patient?.visits[0]?.assignedDoctor === 'object' ? patient?.visits[0]?.assignedDoctor?.name : patient?.visits[0]?.assignedDoctor || "-"}
+              {typeof patient?.visits[0]?.assignedDoctor === "object"
+                ? patient?.visits[0]?.assignedDoctor?.name
+                : patient?.visits[0]?.assignedDoctor || "-"}
             </td>
             <td className="px-6 py-4 text-right">
               <DropdownMenu>
@@ -160,6 +162,9 @@ export function PatientTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setViewPatient(patient)}>
+                    <Recycle className="w-4 h-4 mr-2" /> New Visit
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setViewPatient(patient)}>
                     <Eye className="w-4 h-4 mr-2" /> View
                   </DropdownMenuItem>
