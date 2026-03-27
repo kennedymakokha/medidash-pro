@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Doctor, mockDoctors } from '@/data/mockData';
-import { DoctorFormModal } from '@/components/modals/DoctorFormModal';
-import { ViewDoctorModal } from '@/components/modals/ViewDoctorModal';
-import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-import { toast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Doctor, mockDoctors } from "@/data/mockData";
+import { DoctorFormModal } from "@/components/modals/DoctorFormModal";
+import { ViewDoctorModal } from "@/components/modals/ViewDoctorModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Search,
   Plus,
@@ -26,52 +26,63 @@ import {
   Phone,
   Mail,
   Building2,
-} from 'lucide-react';
-import { useFetchdepartmentsQuery } from '@/features/departmentSlice';
-import { useGetusersQuery, usePostuserMutation } from '@/features/userSlice';
-import { StatsGridSkeleton, CardSkeleton } from '@/components/loaders';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "lucide-react";
+import { useFetchdepartmentsQuery } from "@/features/departmentSlice";
+import { useGetusersQuery, usePostuserMutation } from "@/features/userSlice";
+import { StatsGridSkeleton, CardSkeleton } from "@/components/loaders";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusStyles = {
-  active: 'bg-success/10 text-success border-success/20',
-  'on-leave': 'bg-warning/10 text-warning border-warning/20',
-  inactive: 'bg-muted text-muted-foreground border-muted',
+  active: "bg-success/10 text-success border-success/20",
+  "on-leave": "bg-warning/10 text-warning border-warning/20",
+  inactive: "bg-muted text-muted-foreground border-muted",
 };
 
 export default function DoctorsPage() {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewDoctor, setViewDoctor] = useState<Doctor | null>(null);
   const [editDoctor, setEditDoctor] = useState<Doctor | null>(null);
   const [deleteDoctor, setDeleteDoctor] = useState<Doctor | null>(null);
-  const { data: depts } = useFetchdepartmentsQuery({})
-  const { data: users, refetch, isLoading, isFetching } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search })
+  const { data: depts } = useFetchdepartmentsQuery({});
+  const {
+    data: users,
+    refetch,
+    isLoading,
+    isFetching,
+  } = useGetusersQuery({ role: "doctor", limit: 10, page: 1, search });
   const doctors = users !== undefined ? users?.data : [];
-  const [postDoctor] = usePostuserMutation({})
+  const [postDoctor, { error, isError }] = usePostuserMutation({});
   const pagination = users?.pagination;
   const showLoading = isLoading;
 
-
   const handleAddDoctor = async (doctorData: Doctor) => {
-    await postDoctor(doctorData).unwrap()
-    await refetch()
-    toast({
-      title: 'Doctor Added',
-      description: `${doctorData.name} has been added successfully.`,
-    });
+    try {
+      await postDoctor(doctorData).unwrap();
+      await refetch();
+      toast({
+        title: "Doctor Added",
+        description: `${doctorData.name} has been added successfully.`,
+      });
+    } catch (err) {
 
+      toast({
+        title: "Doctor Addition Failed",
+        variant:'destructive',
+        description: `${err.data.error}`,
+      });
+    }
   };
-
   const handleEditDoctor = async (doctorData: Doctor) => {
     console.log(editDoctor);
 
     if (!editDoctor) return;
 
-    await postDoctor(editDoctor).unwrap()
-    await refetch()
+    await postDoctor(editDoctor).unwrap();
+    await refetch();
     toast({
-      title: 'Doctor Updated',
-      description: 'Doctor information has been updated.',
+      title: "Doctor Updated",
+      description: "Doctor information has been updated.",
     });
     setEditDoctor(null);
   };
@@ -79,17 +90,20 @@ export default function DoctorsPage() {
   const handleDeleteDoctor = async () => {
     if (!deleteDoctor) return;
     await postDoctor({ ...deleteDoctor, isDeleted: true }).unwrap();
-    await refetch()
+    await refetch();
     toast({
-      title: 'Doctor Removed',
+      title: "Doctor Removed",
       description: `${deleteDoctor.name} has been removed.`,
-      variant: 'destructive',
+      variant: "destructive",
     });
     setDeleteDoctor(null);
   };
 
   return (
-    <DashboardLayout title="Doctors" subtitle="Manage hospital doctors and specialists">
+    <DashboardLayout
+      title="Doctors"
+      subtitle="Manage hospital doctors and specialists"
+    >
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
         <div className="relative flex-1 max-w-md">
@@ -114,19 +128,27 @@ export default function DoctorsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-card rounded-xl p-4 shadow-card">
             <p className="text-sm text-muted-foreground">Total Doctors</p>
-            <p className="text-2xl font-bold text-card-foreground">{doctors.length}</p>
+            <p className="text-2xl font-bold text-card-foreground">
+              {doctors.length}
+            </p>
           </div>
           <div className="bg-card rounded-xl p-4 shadow-card">
             <p className="text-sm text-muted-foreground">Active</p>
-            <p className="text-2xl font-bold text-success">{doctors.filter(d => d.status === 'active').length}</p>
+            <p className="text-2xl font-bold text-success">
+              {doctors.filter((d) => d.status === "active").length}
+            </p>
           </div>
           <div className="bg-card rounded-xl p-4 shadow-card">
             <p className="text-sm text-muted-foreground">On Leave</p>
-            <p className="text-2xl font-bold text-warning">{doctors.filter(d => d.status === 'on-leave').length}</p>
+            <p className="text-2xl font-bold text-warning">
+              {doctors.filter((d) => d.status === "on-leave").length}
+            </p>
           </div>
           <div className="bg-card rounded-xl p-4 shadow-card">
             <p className="text-sm text-muted-foreground">Departments</p>
-            <p className="text-2xl font-bold text-card-foreground">{depts !== undefined ? depts.length : 0}</p>
+            <p className="text-2xl font-bold text-card-foreground">
+              {depts !== undefined ? depts.length : 0}
+            </p>
           </div>
         </div>
       )}
@@ -135,7 +157,10 @@ export default function DoctorsPage() {
       {showLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-xl p-6 shadow-card animate-pulse">
+            <div
+              key={i}
+              className="bg-card rounded-xl p-6 shadow-card animate-pulse"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-12 h-12 rounded-full" />
@@ -171,8 +196,12 @@ export default function DoctorsPage() {
                     <Stethoscope className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-card-foreground">{doctor.name}</h3>
-                    <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                    <h3 className="font-semibold text-card-foreground">
+                      {doctor.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {doctor.specialty}
+                    </p>
                   </div>
                 </div>
                 <DropdownMenu>
@@ -214,10 +243,15 @@ export default function DoctorsPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className={cn('capitalize', statusStyles[doctor.status])}>
-                  {doctor?.status?.replace('-', ' ')}
+                <Badge
+                  variant="outline"
+                  className={cn("capitalize", statusStyles[doctor.status])}
+                >
+                  {doctor?.status?.replace("-", " ")}
                 </Badge>
-                <span className="text-xs text-muted-foreground">{doctor.experience} yrs exp</span>
+                <span className="text-xs text-muted-foreground">
+                  {doctor.experience} yrs exp
+                </span>
               </div>
             </div>
           ))}
@@ -227,8 +261,12 @@ export default function DoctorsPage() {
       {!showLoading && doctors.length === 0 && (
         <div className="text-center py-12">
           <Stethoscope className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground">No doctors found</h3>
-          <p className="text-sm text-muted-foreground">Try adjusting your search criteria</p>
+          <h3 className="text-lg font-medium text-muted-foreground">
+            No doctors found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search criteria
+          </p>
         </div>
       )}
 

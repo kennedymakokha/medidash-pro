@@ -162,7 +162,7 @@ export function PatientTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setViewPatient(patient)}>
+                  <DropdownMenuItem onClick={() => {setEditPatient(patient)}}>
                     <Recycle className="w-4 h-4 mr-2" /> New Visit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setViewPatient(patient)}>

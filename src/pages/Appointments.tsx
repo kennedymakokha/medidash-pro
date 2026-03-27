@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Appointment } from '@/types/hospital';
-import { mockAppointments, mockPatients, mockDoctors } from '@/data/mockData';
-import { AppointmentFormModal } from '@/components/modals/AppointmentFormModal';
-import { DeleteConfirmModal } from '@/components/modals/DeleteConfirmModal';
-import { toast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Appointment } from "@/types/hospital";
+import { mockAppointments, mockPatients, mockDoctors } from "@/data/mockData";
+import { AppointmentFormModal } from "@/components/modals/AppointmentFormModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Search,
   Plus,
@@ -31,94 +31,120 @@ import {
   CheckCircle,
   XCircle,
   PlayCircle,
-} from 'lucide-react';
+} from "lucide-react";
+import {
+  useCreateAppointmentMutation,
+  useFetchAppointmentsQuery,
+} from "@/features/appointmentsSlice";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const statusStyles = {
-  scheduled: 'bg-primary/10 text-primary border-primary/20',
-  'in-progress': 'bg-warning/10 text-warning border-warning/20',
-  completed: 'bg-success/10 text-success border-success/20',
-  cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
+  scheduled: "bg-primary/10 text-primary border-primary/20",
+  "in-progress": "bg-warning/10 text-warning border-warning/20",
+  completed: "bg-success/10 text-success border-success/20",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const typeStyles = {
-  checkup: 'bg-primary/10 text-primary',
-  followup: 'bg-accent text-accent-foreground',
-  emergency: 'bg-destructive/10 text-destructive',
-  surgery: 'bg-warning/10 text-warning',
+  checkup: "bg-primary/10 text-primary",
+  followup: "bg-accent text-accent-foreground",
+  emergency: "bg-destructive/10 text-destructive",
+  surgery: "bg-warning/10 text-warning",
 };
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  useState<Appointment[]>(mockAppointments);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  //  const [appointments, setappointments] = useState<Appointment[]>(mockAppointments);
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editAppointment, setEditAppointment] = useState<Appointment | null>(null);
-  const [deleteAppointment, setDeleteAppointment] = useState<Appointment | null>(null);
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
 
-  const filteredAppointments = appointments.filter((apt) => {
-    const matchesSearch =
-      apt.patientName.toLowerCase().includes(search.toLowerCase()) ||
-      apt.doctorName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const { data, refetch, isLoading } = useFetchAppointmentsQuery({
+    page,
+    limit,
+    search: debouncedSearch,
   });
+  const appointments = data !== undefined ? data.data : [];
+  const [editAppointment, setEditAppointment] = useState<Appointment | null>(
+    null,
+  );
+  const [deleteAppointment, setDeleteAppointment] =
+    useState<Appointment | null>(null);
+  const [submitPost, { isLoading: posting, error }] =
+    useCreateAppointmentMutation({});
 
-  const handleAddAppointment = (data: Appointment) => {
-    const newAppointment: Appointment = {
-      ...data,
-      id: Date.now().toString(),
-    };
-    setAppointments([newAppointment, ...appointments]);
-    toast({
-      title: 'Appointment Scheduled',
-      description: `Appointment for ${data.patientName} has been created.`,
-    });
+  const handleAddAppointment = async (data: Appointment) => {
+    try {
+      await submitPost(data).unwrap();
+      await refetch();
+      toast({
+        title: "Appointment Scheduled",
+        description: `Appointment for ${data.patientName} has been created.`,
+      });
+      setEditAppointment(null);
+    } catch (err) {
+      toast({
+        title: "Appointment Schedule Failed",
+        description: `${error}`,
+      });
+    }
   };
 
   const handleEditAppointment = (data: Appointment) => {
     if (!editAppointment) return;
-    setAppointments(
-      appointments.map((a) =>
-        a.id === editAppointment.id ? { ...a, ...data } : a
-      )
-    );
+    // setAppointments(
+    //   appointments.map((a) =>
+    //     a.id === editAppointment.id ? { ...a, ...data } : a,
+    //   ),
+    // );
     toast({
-      title: 'Appointment Updated',
-      description: 'Appointment details have been updated.',
+      title: "Appointment Updated",
+      description: "Appointment details have been updated.",
     });
     setEditAppointment(null);
   };
 
-  const handleDeleteAppointment = () => {
+  const handleDeleteAppointment = async() => {
     if (!deleteAppointment) return;
-    setAppointments(appointments.filter((a) => a.id !== deleteAppointment.id));
+      await submitPost({ ...data, uuid: deleteAppointment?.uuid, status:"cancelled",patientId:deleteAppointment?.patientId }).unwrap();
+    await refetch();
+    // setAppointments(appointments.filter((a) => a.id !== deleteAppointment.id));
     toast({
-      title: 'Appointment Cancelled',
-      description: 'The appointment has been removed.',
-      variant: 'destructive',
+      title: "Appointment Cancelled",
+      description: "The appointment has been removed.",
+      variant: "destructive",
     });
     setDeleteAppointment(null);
   };
 
-  const handleStatusChange = (id: string, status: Appointment['status']) => {
-    setAppointments(
-      appointments.map((a) => (a.id === id ? { ...a, status } : a))
-    );
+  const handleStatusChange = async (
+    id: string, 
+    status: Appointment["status"],
+    patientId:string,
+  ) => {
+    await submitPost({ ...data, uuid: id, status,patientId }).unwrap();
+    await refetch();
     toast({
-      title: 'Status Updated',
+      title: "Status Updated",
       description: `Appointment marked as ${status}.`,
     });
   };
 
   const stats = {
     total: appointments.length,
-    scheduled: appointments.filter((a) => a.status === 'scheduled').length,
-    inProgress: appointments.filter((a) => a.status === 'in-progress').length,
-    completed: appointments.filter((a) => a.status === 'completed').length,
+    scheduled: appointments.filter((a) => a.status === "scheduled").length,
+    inProgress: appointments.filter((a) => a.status === "in-progress").length,
+    completed: appointments.filter((a) => a.status === "completed").length,
   };
 
   return (
-    <DashboardLayout title="Appointments" subtitle="Manage patient appointments and schedules">
+    <DashboardLayout
+      title="Appointments"
+      subtitle="Manage patient appointments and schedules"
+    >
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
         <div className="flex flex-col sm:flex-row gap-3 flex-1">
@@ -135,15 +161,26 @@ export default function AppointmentsPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">Status:</span> {statusFilter === 'all' ? 'All' : statusFilter}
+                <span className="hidden sm:inline">Status:</span>{" "}
+                {statusFilter === "all" ? "All" : statusFilter}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setStatusFilter('all')}>All</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('scheduled')}>Scheduled</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('in-progress')}>In Progress</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('completed')}>Completed</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('cancelled')}>Cancelled</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("all")}>
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("scheduled")}>
+                Scheduled
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("in-progress")}>
+                In Progress
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("completed")}>
+                Completed
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>
+                Cancelled
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -162,7 +199,9 @@ export default function AppointmentsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
+              <p className="text-2xl font-bold text-card-foreground">
+                {stats.total}
+              </p>
             </div>
           </div>
         </div>
@@ -173,7 +212,9 @@ export default function AppointmentsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Scheduled</p>
-              <p className="text-2xl font-bold text-primary">{stats.scheduled}</p>
+              <p className="text-2xl font-bold text-primary">
+                {stats.scheduled}
+              </p>
             </div>
           </div>
         </div>
@@ -184,7 +225,9 @@ export default function AppointmentsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">In Progress</p>
-              <p className="text-2xl font-bold text-warning">{stats.inProgress}</p>
+              <p className="text-2xl font-bold text-warning">
+                {stats.inProgress}
+              </p>
             </div>
           </div>
         </div>
@@ -195,7 +238,9 @@ export default function AppointmentsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Completed</p>
-              <p className="text-2xl font-bold text-success">{stats.completed}</p>
+              <p className="text-2xl font-bold text-success">
+                {stats.completed}
+              </p>
             </div>
           </div>
         </div>
@@ -203,15 +248,20 @@ export default function AppointmentsPage() {
 
       {/* Appointments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredAppointments.map((appointment) => (
-          <Card key={appointment.id} className="shadow-card hover:shadow-elevated transition-shadow">
+        {appointments.map((appointment) => (
+          <Card
+            key={appointment.id}
+            className="shadow-card hover:shadow-elevated transition-shadow"
+          >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-base">{appointment.patientName}</CardTitle>
+                  <CardTitle className="text-base">
+                    {appointment?.patientId?.name}
+                  </CardTitle>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Stethoscope className="w-3 h-3" />
-                    {appointment.doctorName}
+                    {appointment.doctorId.name}
                   </div>
                 </div>
                 <DropdownMenu>
@@ -221,16 +271,26 @@ export default function AppointmentsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditAppointment(appointment)}>
+                    <DropdownMenuItem
+                      onClick={() => setEditAppointment(appointment)}
+                    >
                       <Edit className="w-4 h-4 mr-2" /> Edit
                     </DropdownMenuItem>
-                    {appointment.status === 'scheduled' && (
-                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'in-progress')}>
+                    {appointment.status === "scheduled" && (
+                      <DropdownMenuItem
+                        onClick={() =>
+                          handleStatusChange(appointment.uuid, "in-progress",appointment.patientId)
+                        }
+                      >
                         <PlayCircle className="w-4 h-4 mr-2" /> Start
                       </DropdownMenuItem>
                     )}
-                    {appointment.status === 'in-progress' && (
-                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'completed')}>
+                    {appointment.status === "in-progress" && (
+                      <DropdownMenuItem
+                        onClick={() =>
+                          handleStatusChange(appointment.uuid, "completed",appointment.patientId)
+                        }
+                      >
                         <CheckCircle className="w-4 h-4 mr-2" /> Complete
                       </DropdownMenuItem>
                     )}
@@ -256,11 +316,16 @@ export default function AppointmentsPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Badge className={cn('capitalize', typeStyles[appointment.type])}>
+                <Badge
+                  className={cn("capitalize", typeStyles[appointment.type])}
+                >
                   {appointment.type}
                 </Badge>
-                <Badge variant="outline" className={cn('capitalize', statusStyles[appointment.status])}>
-                  {appointment.status.replace('-', ' ')}
+                <Badge
+                  variant="outline"
+                  className={cn("capitalize", statusStyles[appointment.status])}
+                >
+                  {appointment.status.replace("-", " ")}
                 </Badge>
               </div>
             </CardContent>
@@ -268,11 +333,15 @@ export default function AppointmentsPage() {
         ))}
       </div>
 
-      {filteredAppointments.length === 0 && (
+      {appointments.length === 0 && (
         <div className="text-center py-12">
           <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground">No appointments found</h3>
-          <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
+          <h3 className="text-lg font-medium text-muted-foreground">
+            No appointments found
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search or filter
+          </p>
         </div>
       )}
 

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist';
+export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist' | 'patient';
 
 export interface User {
   _id?: string;
@@ -20,7 +20,7 @@ export interface Patient {
   age?: number;
   sex?: 'male' | 'female' | 'other';
   phone: string;
-  guardianphone?:string
+  guardianphone?: string
   email: string;
   address: string;
   bloodgroup: string;
@@ -53,10 +53,10 @@ export interface Visit {
 
 export interface Appointment {
   id: string;
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  doctorName: string;
+  patientId: { _id: string };
+
+  doctorId: { _id: string };
+  
   date: string;
   time: string;
   type: 'checkup' | 'followup' | 'emergency' | 'surgery';
@@ -100,7 +100,7 @@ export interface VitalRecord {
   id: string;
   uuid?: string;
   patientId: string;
-  patientMongoose?:string,
+  patientMongoose?: string,
   patientName: string;
   recordedAt: string;
   recordedBy: string;
