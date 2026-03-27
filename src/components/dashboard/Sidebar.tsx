@@ -150,7 +150,7 @@ const navItems: NavItem[] = [
     href: "/reports",
     icon: ClipboardList,
     feature: "reports",
-    roles: ["admin", "doctor"],
+    roles: ["admin", "doctor","patient"],
     implemented: true,
   },
 ];
@@ -206,7 +206,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             </div>
             <div>
               <h1 className="text-base lg:text-lg font-bold text-sidebar-foreground">
-                MediCare
+                LIFECARE
               </h1>
               <p className="text-[10px] lg:text-xs text-sidebar-foreground/60">
                 Hospital Management

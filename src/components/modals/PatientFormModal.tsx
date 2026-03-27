@@ -11,7 +11,7 @@ interface PatientFormModalProps {
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
   onSubmit: (patient: Patient) => void;
-  mode: "add" | "edit";
+  mode: "add" | "edit" |"new-visit";
 }
 
 const defaultForm = {
@@ -89,7 +89,7 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
           <DialogTitle>{mode === "add" ? "Add New Patient" : "Edit Patient"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <FingerprintSection scanning={scanning} fingerprintData={fingerprintData} onScan={scanFingerprint} />
+          {/* <FingerprintSection scanning={scanning} fingerprintData={fingerprintData} onScan={scanFingerprint} /> */}
           <PatientFormFields formData={formData} onChange={setFormData} doctors={doctors} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

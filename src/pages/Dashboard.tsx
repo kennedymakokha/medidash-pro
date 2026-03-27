@@ -67,6 +67,7 @@ const {data:monthly}= useFetchmonthlysumQuery({})
   const [selectedPatientForAppointment, setSelectedPatientForAppointment] = useState(null);
   const [viewPatient, setViewPatient] = useState(null);
 
+  console.log(patients);
   // Role-based data
   const myPatients = role === 'doctor' ? patients.filter(p => p.assignedDoctor === user?.name) : [];
   const myAppointments = role === 'doctor' ? appointments.filter(a => a.doctorName === user?.name) : [];
@@ -217,7 +218,7 @@ const {data:monthly}= useFetchmonthlysumQuery({})
             viewPaginated={() => {}}
             viewAll={() => {}}
             patients={role === 'doctor'
-              ? data?.data?.filter(p => p.assignedDoctor === user?.name) ?? []
+              ? data?.data?.filter(p => p.assignedDoctor?.name === user?.name) ?? []
               : data?.data ?? []
             }
             title={role === 'doctor' ? 'My Patients' : 'All Patients'}

@@ -74,7 +74,7 @@ export function LabOrdersTable({
       }),
     [orders, search],
   );
-  console.log(filteredOrders);
+
   const rows = useMemo(
     () =>
       filteredOrders?.map((order) => (
