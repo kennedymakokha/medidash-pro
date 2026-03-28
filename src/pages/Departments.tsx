@@ -467,7 +467,7 @@ export default function DepartmentsPage() {
                 <div className="bg-muted/50 rounded-lg p-4 text-center">
                   <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
                   <p className="text-2xl font-bold text-card-foreground">
-                    {viewDept?.staffs.length}
+                    {viewDept?.staffs?.length ?? viewDept?.staffCount ?? 0}
                   </p>
                   <p className="text-muted-foreground">Staff Members</p>
                 </div>
