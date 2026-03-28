@@ -29,11 +29,11 @@ export interface Procedure {
 
 export interface Consultation {
   id?: string;
-   _id?: string;
-  uuid?:string
+  _id?: string;
+  uuid?: string;
   patientId?: string;
-  patientMongoose?:string;
-  visits?: Visit[]
+  patientMongoose?: any;
+  visits?: Visit[];
   name?: string;
   doctorId?: string;
   doctorName?: string;
@@ -48,8 +48,15 @@ export interface Consultation {
   prescribedProcedures: string[];
   medications?: string[];
   notes: string;
-  assignedDoctor:User
+  assignedDoctor: User;
   consultationFee: number;
   createdAt: string;
   updatedAt: string;
+  bp?: string;
+  temperature?: number;
+  pulse?: number;
+  oxygenSaturation?: number;
+  heartRate?: number;
+  labResults?: any[];
+  medicines?: any[];
 }

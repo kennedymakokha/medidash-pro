@@ -6,13 +6,19 @@ import { DataTable } from "@/components/table/DataTable";
 import { useUpdatelabtestMutation } from "@/features/visitsSlice";
 
 export interface LabOrder {
-  id: string;
-  patientName: string;
-  patientId: string;
-  testName: string;
-  category: string;
-  orderedBy: string;
-  orderedAt: string;
+  id?: string;
+  _id?: string;
+  uuid?: string;
+  patientName?: string;
+  patientId?: any;
+  patientMongoose?: any;
+  testId?: any;
+  testName?: string;
+  category?: string;
+  orderedBy?: string;
+  orderedAt?: string;
+  createdAt?: string;
+  visitId?: any;
   status: "pending" | "in-progress" | "completed" | "cancelled";
   priority: "routine" | "urgent" | "stat";
   result?: string;
@@ -28,10 +34,10 @@ interface LabOrdersTableProps {
   onPageChange: (page: number) => void;
   refetch?: () => void;
   title?: string;
-  resultText?:string
-  setSelectedOrder: () => void;
-  setResultModal: () => void;
-  setResultText: () => void;
+  resultText?: string;
+  setSelectedOrder: (order: any) => void;
+  setResultModal: (order: any) => void;
+  setResultText: (text: string) => void;
 }
 
 const statusStyles: Record<string, string> = {
@@ -65,7 +71,7 @@ export function LabOrdersTable({
 
   const filteredOrders = useMemo(
     () =>
-      orders?.filter((o) => {
+      orders?.filter((o: any) => {
         const matchSearch =
           o?.patientId?.name?.toLowerCase().includes(search.toLowerCase()) ||
           o?.testId?.testName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -74,24 +80,23 @@ export function LabOrdersTable({
       }),
     [orders, search],
   );
-  console.log(filteredOrders);
+
   const rows = useMemo(
     () =>
-      filteredOrders?.map((order) => (
-        <tr key={order._id} className="hover:bg-muted/30">
+      filteredOrders?.map((order: any) => (
+        <tr key={order._id ?? order.id} className="hover:bg-muted/30">
           <td className="px-6 py-4 font-mono">{order.uuid}</td>
           <td className="px-6 py-4 font-medium">
-            {" "}
-            {order?.visitId?.patientMongoose?.name}
+            {order?.visitId?.patientMongoose?.name ?? order?.patientName}
           </td>
           <td className="px-6 py-4">
-            <p className="text-sm">{order?.testId?.testName}</p>
+            <p className="text-sm">{order?.testId?.testName ?? order?.testName}</p>
             <Badge variant="outline" className="text-xs">
-              {order?.testId?.category}
+              {order?.testId?.category ?? order?.category}
             </Badge>
           </td>
           <td className="px-6 py-4 text-sm text-muted-foreground">
-            {order?.visitId?.assignedDoctor?.name}
+            {order?.visitId?.assignedDoctor?.name ?? order?.orderedBy}
           </td>
           <td className="px-6 py-4">
             <Badge className={priorityStyles[order.priority]}>
@@ -120,10 +125,10 @@ export function LabOrdersTable({
                       testUuid: `${order?.uuid}`,
                       status: "in-progress",
                     });
-                    await refetch();
+                    if (refetch) await refetch();
                   }}
                 >
-                  {!isLoading ? "isLoading..." : "Start"}
+                  Start
                 </Button>
               )}
               {order.status === "in-progress" && (
@@ -154,27 +159,13 @@ export function LabOrdersTable({
       onPageChange={onPageChange}
       columns={
         <tr className="bg-muted/50">
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Order ID
-          </th>
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Patient
-          </th>
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Test
-          </th>
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Ordered By
-          </th>
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Priority
-          </th>
-          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">
-            Status
-          </th>
-          <th className="text-right px-6 py-3 text-xs font-semibold uppercase">
-            Actions
-          </th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Order ID</th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Patient</th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Test</th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Ordered By</th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Priority</th>
+          <th className="text-left px-6 py-3 text-xs font-semibold uppercase">Status</th>
+          <th className="text-right px-6 py-3 text-xs font-semibold uppercase">Actions</th>
         </tr>
       }
       rows={rows}

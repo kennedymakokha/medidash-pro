@@ -19,6 +19,7 @@ const defaultForm = {
   phone: "", address: "", bloodgroup: "A+",
   status: "outpatient" as Patient["status"],
   assignedDoctor: "", room: "", nationalId: "",
+  nokName: "", nokRelationship: "", nokPhone: "", guardianphone: "",
 };
 
 export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }: PatientFormModalProps) {
@@ -45,6 +46,10 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
           : patient.assignedDoctor ?? "",
         room: patient.room ?? "",
         nationalId: patient.nationalId ?? "",
+        nokName: patient.nokName ?? "",
+        nokRelationship: patient.nokRelationship ?? "",
+        nokPhone: patient.nokPhone ?? "",
+        guardianphone: patient.guardianphone ?? "",
       });
     } else {
       setFormData(defaultForm);
@@ -78,7 +83,6 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
       visits: [],
     } as unknown as Patient;
     onSubmit(patientData);
-    console.log(patientData);
     onOpenChange(false);
   };
 
@@ -90,7 +94,7 @@ export function PatientFormModal({ open, onOpenChange, patient, onSubmit, mode }
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <FingerprintSection scanning={scanning} fingerprintData={fingerprintData} onScan={scanFingerprint} />
-          <PatientFormFields formData={formData} onChange={setFormData} doctors={doctors} />
+          <PatientFormFields formData={formData as any} onChange={setFormData as any} doctors={doctors} />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit">{mode === "add" ? "Add Patient" : "Save Changes"}</Button>

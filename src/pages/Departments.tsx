@@ -108,7 +108,7 @@ export default function DepartmentsPage() {
     //   console.log(element);
     // }
     if (editDept) {
-      await postDept({ ...formData, uuid: editDept.uuid }).unwrap();
+      await postDept({ ...formData, uuid: (editDept as any).uuid }).unwrap();
       refetch()
       toast({
         title: "Department Updated",
@@ -128,7 +128,7 @@ export default function DepartmentsPage() {
 
   const handleDelete = async () => {
     if (!deleteDept) return;
-     await postDept({ ...deleteDept, isDeleted:true,uuid:deleteDept.uuid  }).unwrap();
+     await postDept({ ...deleteDept, isDeleted:true,uuid:(deleteDept as any).uuid  }).unwrap();
      refetch()
     toast({
       title: "Department Removed",
@@ -279,7 +279,7 @@ export default function DepartmentsPage() {
               {dept.head && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Stethoscope className="w-4 h-4" />
-                  <span>Head: {dept.head.name}</span>
+                  <span>Head: {typeof dept.head === 'object' ? dept.head?.name : dept.head}</span>
                 </div>
               )}
               <div className="flex items-center justify-between">
@@ -289,7 +289,7 @@ export default function DepartmentsPage() {
                     className="bg-primary/10 text-primary border-primary/20"
                   >
                     <Users className="w-3 h-3 mr-1" />
-                    {dept?.staffs?.length} Staff
+                    {dept?.staffs?.length ?? dept?.staffCount ?? 0} Staff
                   </Badge>
                 </div>
                 <Badge
@@ -297,7 +297,7 @@ export default function DepartmentsPage() {
                   className="bg-success/10 text-success border-success/20"
                 >
                   <UserCheck className="w-3 h-3 mr-1" />
-                  {dept?.patients?.length} Patients
+                  {dept?.patients?.length ?? dept?.patientCount ?? 0} Patients
                 </Badge>
               </div>
               {dept.fee && (
@@ -458,7 +458,7 @@ export default function DepartmentsPage() {
                   <h3 className="text-xl font-semibold">{viewDept.name}</h3>
                   {viewDept.head && (
                     <p className="text-muted-foreground">
-                      Head: {viewDept.head?.name}
+                      Head: {typeof viewDept.head === 'object' ? viewDept.head?.name : viewDept.head}
                     </p>
                   )}
                 </div>
@@ -467,14 +467,14 @@ export default function DepartmentsPage() {
                 <div className="bg-muted/50 rounded-lg p-4 text-center">
                   <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
                   <p className="text-2xl font-bold text-card-foreground">
-                    {viewDept?.staffs.length}
+                    {viewDept?.staffs?.length ?? viewDept?.staffCount ?? 0}
                   </p>
                   <p className="text-muted-foreground">Staff Members</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-4 text-center">
                   <UserCheck className="w-6 h-6 mx-auto mb-2 text-success" />
                   <p className="text-2xl font-bold text-card-foreground">
-                    {viewDept?.patients?.length}
+                    {viewDept?.patients?.length ?? viewDept?.patientCount ?? 0}
                   </p>
                   <p className="text-muted-foreground">Current Patients</p>
                 </div>

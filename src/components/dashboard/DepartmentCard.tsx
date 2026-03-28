@@ -11,7 +11,9 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
       <h4 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
         {department.name}
       </h4>
-      <p className="text-sm text-muted-foreground mt-1">{department?.head?.name}</p>
+      <p className="text-sm text-muted-foreground mt-1">
+        {typeof department?.head === 'object' ? department?.head?.name : department?.head}
+      </p>
       
       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
         <div className="flex items-center gap-2">
@@ -19,7 +21,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             <Users className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-card-foreground">{department?.staffs?.length}</p>
+            <p className="text-sm font-semibold text-card-foreground">{department?.staffs?.length ?? department?.staffCount ?? 0}</p>
             <p className="text-xs text-muted-foreground">Staff</p>
           </div>
         </div>
@@ -28,7 +30,7 @@ export function DepartmentCard({ department }: DepartmentCardProps) {
             <UserCheck className="w-3.5 h-3.5 text-success" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-card-foreground">{department?.patients?.length}</p>
+            <p className="text-sm font-semibold text-card-foreground">{department?.patients?.length ?? department?.patientCount ?? 0}</p>
             <p className="text-xs text-muted-foreground">Patients</p>
           </div>
         </div>

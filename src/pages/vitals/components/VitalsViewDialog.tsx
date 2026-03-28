@@ -1,7 +1,6 @@
 import { Activity, Heart, Thermometer, Wind, Droplets } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { VitalRecord } from "@/types/hospital";
 import { cn } from "@/lib/utils";
 
 const statusStyles = {
@@ -10,17 +9,23 @@ const statusStyles = {
   critical: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-function getVitalStatus(vital: VitalRecord): "normal" | "warning" | "critical" {
-  if (vital.temperature > 102 || vital.bloodPressureSystolic > 160 || vital.bloodPressureDiastolic > 100 || vital.heartRate > 120 || vital.oxygenSaturation < 90) return "critical";
-  if (vital.temperature > 100 || vital.bloodPressureSystolic > 140 || vital.bloodPressureDiastolic > 90 || vital.heartRate > 100 || vital.oxygenSaturation < 95) return "warning";
+function getVitalStatus(vital: any): "normal" | "warning" | "critical" {
+  const temp = Number(vital.temperature) || 0;
+  const sys = Number(vital.bloodPressureSystolic) || 0;
+  const dia = Number(vital.bloodPressureDiastolic) || 0;
+  const hr = Number(vital.heartRate ?? vital.pulse) || 0;
+  const spo2 = Number(vital.oxygenSaturation) || 0;
+  if (temp > 102 || sys > 160 || dia > 100 || hr > 120 || spo2 < 90) return "critical";
+  if (temp > 100 || sys > 140 || dia > 90 || hr > 100 || spo2 < 95) return "warning";
   return "normal";
 }
 
-interface Props { vital: VitalRecord | null; onClose: () => void }
+interface Props { vital: any | null; onClose: () => void }
 
 export function VitalsViewDialog({ vital, onClose }: Props) {
   if (!vital) return null;
   const status = getVitalStatus(vital);
+  const [sys, dia] = (vital.bp ?? "0/0").split("/").map(Number);
 
   const metricCard = (icon: React.ReactNode, label: string, value: React.ReactNode) => (
     <div className="p-3 rounded-lg bg-muted/50">
@@ -41,26 +46,26 @@ export function VitalsViewDialog({ vital, onClose }: Props) {
               <Activity className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <p className="font-semibold">{vital.patientName}</p>
-              <p className="text-sm text-muted-foreground">{vital.recordedAt}</p>
+              <p className="font-semibold">{vital?.patientMongoose?.name ?? vital.patientName}</p>
+              <p className="text-sm text-muted-foreground">{vital.recordedAt ?? vital.createdAt}</p>
             </div>
             <Badge variant="outline" className={cn("ml-auto capitalize", statusStyles[status])}>{status}</Badge>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {metricCard(<Thermometer className="w-4 h-4" />, "Temperature", `${vital.temperature}°F`)}
-            {metricCard(<Heart className="w-4 h-4" />, "Heart Rate", `${vital.heartRate} bpm`)}
-            {metricCard(<Droplets className="w-4 h-4" />, "Blood Pressure", `${vital.bloodPressureSystolic}/${vital.bloodPressureDiastolic}`)}
+            {metricCard(<Thermometer className="w-4 h-4" />, "Temperature", `${vital.temperature}°C`)}
+            {metricCard(<Heart className="w-4 h-4" />, "Heart Rate", `${vital.heartRate ?? vital.pulse} bpm`)}
+            {metricCard(<Droplets className="w-4 h-4" />, "Blood Pressure", `${sys}/${dia}`)}
             {metricCard(<Wind className="w-4 h-4" />, "Respiratory Rate", `${vital.respiratoryRate}/min`)}
           </div>
           {metricCard(<Activity className="w-4 h-4" />, "Oxygen Saturation", `${vital.oxygenSaturation}%`)}
           {(vital.weight || vital.height) && (
             <div className="grid grid-cols-2 gap-4">
-              {vital.weight && <div className="p-3 rounded-lg bg-muted/50"><span className="text-xs text-muted-foreground">Weight</span><p className="font-semibold">{vital.weight} lbs</p></div>}
-              {vital.height && <div className="p-3 rounded-lg bg-muted/50"><span className="text-xs text-muted-foreground">Height</span><p className="font-semibold">{vital.height} in</p></div>}
+              {vital.weight && <div className="p-3 rounded-lg bg-muted/50"><span className="text-xs text-muted-foreground">Weight</span><p className="font-semibold">{vital.weight} kg</p></div>}
+              {vital.height && <div className="p-3 rounded-lg bg-muted/50"><span className="text-xs text-muted-foreground">Height</span><p className="font-semibold">{vital.height} cm</p></div>}
             </div>
           )}
           {vital.notes && <div className="p-3 rounded-lg bg-muted/50"><span className="text-xs text-muted-foreground">Notes</span><p className="text-sm mt-1">{vital.notes}</p></div>}
-          <div className="text-sm text-muted-foreground">Recorded by: {vital?.vitalsNurseId?.name}</div>
+          <div className="text-sm text-muted-foreground">Recorded by: {vital?.vitalsNurseId?.name ?? vital?.created_by?.name}</div>
         </div>
       </DialogContent>
     </Dialog>
