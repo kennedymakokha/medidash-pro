@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,43 +6,24 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  Eye,
-  Download,
-  FileText,
-  Filter,
-  Calendar,
-  User,
-  Stethoscope,
-  ClipboardList,
-  FileBarChart,
-  FilePlus,
+  Search, Plus, MoreHorizontal, Eye, Download, FileText, Filter,
+  Calendar, User, Stethoscope, FileBarChart, FilePlus, ClipboardList,
 } from 'lucide-react';
+import { useFetchvisitsQuery, useFetchvisitlabordersQuery } from '@/features/visitsSlice';
+import { useFetchpatientsQuery } from '@/features/patientSlice';
+import { TableSkeleton } from '@/components/loaders';
 
 interface Report {
   id: string;
@@ -54,15 +35,6 @@ interface Report {
   status: 'pending' | 'completed' | 'reviewed';
   summary?: string;
 }
-
-const mockReports: Report[] = [
-  { id: '1', title: 'Blood Test Results', type: 'lab', patientName: 'John Smith', doctorName: 'Dr. Michael Chen', date: '2024-01-20', status: 'completed', summary: 'All values within normal range.' },
-  { id: '2', title: 'Chest X-Ray Report', type: 'radiology', patientName: 'Mary Johnson', doctorName: 'Dr. Sarah Lee', date: '2024-01-19', status: 'reviewed', summary: 'No abnormalities detected.' },
-  { id: '3', title: 'Discharge Summary', type: 'discharge', patientName: 'Jennifer Davis', doctorName: 'Dr. Emily White', date: '2024-01-18', status: 'completed', summary: 'Patient recovered and discharged with follow-up instructions.' },
-  { id: '4', title: 'MRI Scan Results', type: 'radiology', patientName: 'Robert Williams', doctorName: 'Dr. Michael Chen', date: '2024-01-20', status: 'pending', summary: 'Awaiting radiologist review.' },
-  { id: '5', title: 'Prescription', type: 'prescription', patientName: 'David Brown', doctorName: 'Dr. James Wilson', date: '2024-01-21', status: 'completed' },
-  { id: '6', title: 'General Consultation', type: 'general', patientName: 'John Smith', doctorName: 'Dr. Michael Chen', date: '2024-01-15', status: 'reviewed' },
-];
 
 const statusStyles = {
   pending: 'bg-warning/10 text-warning border-warning/20',
@@ -78,18 +50,76 @@ const typeStyles = {
   general: { bg: 'bg-muted', color: 'text-foreground', icon: FileText },
 };
 
+function mapVisitsToReports(visits: any[]): Report[] {
+  return visits.map((v: any) => {
+    const hasLab = v.labOrders && v.labOrders.length > 0;
+    const hasDiagnosis = !!v.diagnosis;
+    const type: Report['type'] = hasLab ? 'lab' : hasDiagnosis ? 'general' : 'general';
+    
+    let status: Report['status'] = 'pending';
+    if (v.track === 'completed' || v.disposition) status = 'completed';
+    else if (v.diagnosis) status = 'reviewed';
+
+    return {
+      id: v._id ?? v.id ?? '',
+      title: hasDiagnosis ? `Diagnosis: ${v.diagnosis}` : hasLab ? 'Lab Order Report' : `Visit Report - ${v.track ?? 'general'}`,
+      type,
+      patientName: v.patientMongoose?.name ?? 'Unknown Patient',
+      doctorName: v.assignedDoctor?.name ?? 'Unassigned',
+      date: v.createdAt ? new Date(v.createdAt).toISOString().split('T')[0] : '',
+      status,
+      summary: v.notes ?? v.chiefComplaint ?? '',
+    };
+  });
+}
+
+function mapLabOrdersToReports(orders: any[]): Report[] {
+  return orders.map((o: any) => ({
+    id: o._id ?? o.uuid ?? '',
+    title: `Lab: ${o.testId?.testName ?? o.testName ?? 'Unknown Test'}`,
+    type: 'lab' as const,
+    patientName: o.visitId?.patientMongoose?.name ?? o.patientName ?? 'Unknown',
+    doctorName: o.visitId?.assignedDoctor?.name ?? o.orderedBy ?? 'Unassigned',
+    date: o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : '',
+    status: o.status === 'completed' ? 'completed' as const : 'pending' as const,
+    summary: o.result ?? `${o.testId?.testName ?? ''} - ${o.status}`,
+  }));
+}
+
 export default function ReportsPage() {
-  const [reports, setReports] = useState<Report[]>(mockReports);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [viewReport, setViewReport] = useState<Report | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [page] = useState(1);
+
+  const { data: visitsData, isLoading: visitsLoading } = useFetchvisitsQuery({
+    page, limit: 100, search: '', track: '',
+  });
+  const { data: labsData, isLoading: labsLoading } = useFetchvisitlabordersQuery({
+    page, limit: 100, search: '', status: '',
+  });
+
+  const isLoading = visitsLoading || labsLoading;
+
+  const reports = useMemo(() => {
+    const visitReports = mapVisitsToReports(visitsData?.data ?? []);
+    const labReports = mapLabOrdersToReports(labsData?.data ?? []);
+    
+    // Deduplicate by id
+    const seen = new Set<string>();
+    const combined: Report[] = [];
+    [...labReports, ...visitReports].forEach(r => {
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        combined.push(r);
+      }
+    });
+    return combined.sort((a, b) => b.date.localeCompare(a.date));
+  }, [visitsData, labsData]);
 
   const [formData, setFormData] = useState({
-    title: '',
-    type: 'general' as Report['type'],
-    patientName: '',
-    summary: '',
+    title: '', type: 'general' as Report['type'], patientName: '', summary: '',
   });
 
   const filteredReports = reports.filter((report) => {
@@ -102,17 +132,6 @@ export default function ReportsPage() {
   });
 
   const handleCreate = () => {
-    const newReport: Report = {
-      id: Date.now().toString(),
-      title: formData.title,
-      type: formData.type,
-      patientName: formData.patientName,
-      doctorName: 'Dr. Current User',
-      date: new Date().toISOString().split('T')[0],
-      status: 'pending',
-      summary: formData.summary,
-    };
-    setReports([newReport, ...reports]);
     toast({ title: 'Report Created', description: `${formData.title} has been created.` });
     setCreateModalOpen(false);
     setFormData({ title: '', type: 'general', patientName: '', summary: '' });
@@ -136,12 +155,7 @@ export default function ReportsPage() {
         <div className="flex flex-col sm:flex-row gap-3 flex-1">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search reports..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Search reports..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -168,129 +182,97 @@ export default function ReportsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning/10">
-              <FileText className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold text-warning">{stats.pending}</p>
+        {[
+          { label: 'Total', value: stats.total, color: 'text-card-foreground', iconColor: 'bg-primary/10 text-primary' },
+          { label: 'Pending', value: stats.pending, color: 'text-warning', iconColor: 'bg-warning/10 text-warning' },
+          { label: 'Completed', value: stats.completed, color: 'text-success', iconColor: 'bg-success/10 text-success' },
+          { label: 'Reviewed', value: stats.reviewed, color: 'text-primary', iconColor: 'bg-primary/10 text-primary' },
+        ].map((s) => (
+          <div key={s.label} className="bg-card rounded-xl p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${s.iconColor.split(' ')[0]}`}>
+                <FileText className={`w-5 h-5 ${s.iconColor.split(' ')[1]}`} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{s.label}</p>
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-success/10">
-              <FileText className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
-              <p className="text-2xl font-bold text-success">{stats.completed}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-card rounded-xl p-4 shadow-card">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Reviewed</p>
-              <p className="text-2xl font-bold text-primary">{stats.reviewed}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredReports.map((report) => {
-          const typeConfig = typeStyles[report.type];
-          const Icon = typeConfig.icon;
-          return (
-            <Card key={report.id} className="shadow-card hover:shadow-elevated transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("p-2 rounded-lg", typeConfig.bg)}>
-                      <Icon className={cn("w-5 h-5", typeConfig.color)} />
+      {/* Loading State */}
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={4} />
+      ) : (
+        <>
+          {/* Reports Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredReports.map((report) => {
+              const typeConfig = typeStyles[report.type];
+              const Icon = typeConfig.icon;
+              return (
+                <Card key={report.id} className="shadow-card hover:shadow-elevated transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-2 rounded-lg", typeConfig.bg)}>
+                          <Icon className={cn("w-5 h-5", typeConfig.color)} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-base truncate">{report.title}</CardTitle>
+                          <Badge className={cn('capitalize text-xs mt-1', typeConfig.bg, typeConfig.color)}>{report.type}</Badge>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setViewReport(report)}><Eye className="w-4 h-4 mr-2" /> View</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownload(report)}><Download className="w-4 h-4 mr-2" /> Download</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base truncate">{report.title}</CardTitle>
-                      <Badge className={cn('capitalize text-xs mt-1', typeConfig.bg, typeConfig.color)}>
-                        {report.type}
-                      </Badge>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <User className="w-3 h-3" /><span className="truncate">{report.patientName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Stethoscope className="w-3 h-3" /><span className="truncate">{report.doctorName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="w-3 h-3" /><span>{report.date}</span>
+                      </div>
                     </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setViewReport(report)}>
-                        <Eye className="w-4 h-4 mr-2" /> View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDownload(report)}>
-                        <Download className="w-4 h-4 mr-2" /> Download
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <User className="w-3 h-3" />
-                    <span className="truncate">{report.patientName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Stethoscope className="w-3 h-3" />
-                    <span className="truncate">{report.doctorName}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="w-3 h-3" />
-                    <span>{report.date}</span>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Badge variant="outline" className={cn('capitalize', statusStyles[report.status])}>
-                    {report.status}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    <div className="flex justify-end">
+                      <Badge variant="outline" className={cn('capitalize', statusStyles[report.status])}>{report.status}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-      {filteredReports.length === 0 && (
-        <div className="text-center py-12">
-          <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground">No reports found</h3>
-          <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
-        </div>
+          {filteredReports.length === 0 && (
+            <div className="text-center py-12">
+              <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-muted-foreground">No reports found</h3>
+              <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* View Modal */}
       <Dialog open={!!viewReport} onOpenChange={(open) => !open && setViewReport(null)}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Report Details</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Report Details</DialogTitle></DialogHeader>
           {viewReport && (
             <div className="space-y-4 py-4">
               <div className="flex items-center gap-4">
@@ -299,41 +281,20 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">{viewReport.title}</h3>
-                  <Badge className={cn('capitalize', typeStyles[viewReport.type].bg, typeStyles[viewReport.type].color)}>
-                    {viewReport.type}
-                  </Badge>
+                  <Badge className={cn('capitalize', typeStyles[viewReport.type].bg, typeStyles[viewReport.type].color)}>{viewReport.type}</Badge>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Patient</p>
-                  <p className="font-medium">{viewReport.patientName}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Doctor</p>
-                  <p className="font-medium">{viewReport.doctorName}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Date</p>
-                  <p className="font-medium">{viewReport.date}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Status</p>
-                  <Badge variant="outline" className={cn('capitalize', statusStyles[viewReport.status])}>
-                    {viewReport.status}
-                  </Badge>
-                </div>
+                <div><p className="text-muted-foreground">Patient</p><p className="font-medium">{viewReport.patientName}</p></div>
+                <div><p className="text-muted-foreground">Doctor</p><p className="font-medium">{viewReport.doctorName}</p></div>
+                <div><p className="text-muted-foreground">Date</p><p className="font-medium">{viewReport.date}</p></div>
+                <div><p className="text-muted-foreground">Status</p><Badge variant="outline" className={cn('capitalize', statusStyles[viewReport.status])}>{viewReport.status}</Badge></div>
               </div>
               {viewReport.summary && (
-                <div>
-                  <p className="text-muted-foreground text-sm mb-1">Summary</p>
-                  <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewReport.summary}</p>
-                </div>
+                <div><p className="text-muted-foreground text-sm mb-1">Summary</p><p className="text-sm bg-muted/50 p-3 rounded-lg">{viewReport.summary}</p></div>
               )}
               <div className="flex justify-end">
-                <Button onClick={() => handleDownload(viewReport)} className="gap-2">
-                  <Download className="w-4 h-4" /> Download Report
-                </Button>
+                <Button onClick={() => handleDownload(viewReport)} className="gap-2"><Download className="w-4 h-4" /> Download Report</Button>
               </div>
             </div>
           )}
@@ -343,17 +304,11 @@ export default function ReportsPage() {
       {/* Create Modal */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Report</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Create New Report</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Report Title</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter report title"
-              />
+              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Enter report title" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -371,27 +326,16 @@ export default function ReportsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Patient Name</Label>
-                <Input
-                  value={formData.patientName}
-                  onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                  placeholder="Patient name"
-                />
+                <Input value={formData.patientName} onChange={(e) => setFormData({ ...formData, patientName: e.target.value })} placeholder="Patient name" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Summary</Label>
-              <Textarea
-                value={formData.summary}
-                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                placeholder="Enter report summary..."
-                rows={4}
-              />
+              <Textarea value={formData.summary} onChange={(e) => setFormData({ ...formData, summary: e.target.value })} placeholder="Enter report summary..." rows={4} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate}>Create Report</Button>
           </DialogFooter>
         </DialogContent>
