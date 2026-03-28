@@ -297,7 +297,7 @@ export default function DepartmentsPage() {
                   className="bg-success/10 text-success border-success/20"
                 >
                   <UserCheck className="w-3 h-3 mr-1" />
-                  {dept?.patients?.length} Patients
+                  {dept?.patients?.length ?? dept?.patientCount ?? 0} Patients
                 </Badge>
               </div>
               {dept.fee && (
