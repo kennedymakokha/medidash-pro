@@ -108,7 +108,7 @@ export default function DepartmentsPage() {
     //   console.log(element);
     // }
     if (editDept) {
-      await postDept({ ...formData, uuid: editDept.uuid }).unwrap();
+      await postDept({ ...formData, uuid: (editDept as any).uuid }).unwrap();
       refetch()
       toast({
         title: "Department Updated",
