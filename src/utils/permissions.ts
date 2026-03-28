@@ -49,6 +49,18 @@ export const canAccessFeature = (
       "finance",
       "beds",
     ],
+    finance: [
+      "dashboard", 
+      "finance", 
+      "reports",
+      "patients", // Usually needed to find who to bill
+    ],
+    lab_tech: [
+      "dashboard", 
+      "lab", 
+      "patients", 
+      "vitals",
+    ],
   };
 
   // Role permission check
