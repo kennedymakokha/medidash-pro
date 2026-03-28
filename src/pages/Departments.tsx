@@ -289,7 +289,7 @@ export default function DepartmentsPage() {
                     className="bg-primary/10 text-primary border-primary/20"
                   >
                     <Users className="w-3 h-3 mr-1" />
-                    {dept?.staffs?.length} Staff
+                    {dept?.staffs?.length ?? dept?.staffCount ?? 0} Staff
                   </Badge>
                 </div>
                 <Badge
