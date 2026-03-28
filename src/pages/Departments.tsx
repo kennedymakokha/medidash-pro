@@ -474,7 +474,7 @@ export default function DepartmentsPage() {
                 <div className="bg-muted/50 rounded-lg p-4 text-center">
                   <UserCheck className="w-6 h-6 mx-auto mb-2 text-success" />
                   <p className="text-2xl font-bold text-card-foreground">
-                    {viewDept?.patients?.length}
+                    {viewDept?.patients?.length ?? viewDept?.patientCount ?? 0}
                   </p>
                   <p className="text-muted-foreground">Current Patients</p>
                 </div>
