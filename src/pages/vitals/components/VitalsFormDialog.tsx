@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 interface FormData {
   uuid: string;
   patientId: string;
+  patientMongoose?: string;
   temperature: string;
   bloodPressureSystolic: string;
   bloodPressureDiastolic: string;
@@ -30,7 +31,7 @@ export function VitalsFormDialog({ open, onOpenChange, formData, onChange, onSub
   const field = (key: keyof FormData, label: string, placeholder: string, type = "number", step?: string) => (
     <div>
       <Label htmlFor={key}>{label}</Label>
-      <Input id={key} type={type} step={step} placeholder={placeholder} value={formData[key]}
+      <Input id={key} type={type} step={step} placeholder={placeholder} value={formData[key] ?? ""}
         onChange={(e) => onChange({ ...formData, [key]: e.target.value })} required={type === "number"} />
     </div>
   );
@@ -43,7 +44,7 @@ export function VitalsFormDialog({ open, onOpenChange, formData, onChange, onSub
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            {field("temperature", "Temperature (°F)", "98.6", "number", "0.1")}
+            {field("temperature", "Temperature (°C)", "36.5", "number", "0.1")}
             {field("heartRate", "Heart Rate (bpm)", "72")}
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -55,8 +56,8 @@ export function VitalsFormDialog({ open, onOpenChange, formData, onChange, onSub
             {field("oxygenSaturation", "Oxygen Saturation (%)", "98")}
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {field("weight", "Weight (lbs) - Optional", "180")}
-            {field("height", "Height (in) - Optional", "72")}
+            {field("weight", "Weight (kg) - Optional", "70")}
+            {field("height", "Height (cm) - Optional", "170")}
           </div>
           <div>
             <Label htmlFor="notes">Notes - Optional</Label>
