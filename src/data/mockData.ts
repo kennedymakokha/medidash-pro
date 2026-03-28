@@ -497,7 +497,7 @@ const mockLabOrders: LabOrder[] = [
     priority: "stat",
   },
 ];
-const mockCareTasks: CareTask[] = [
+const mockCareTasks: any[] = [
   {
     id: "1",
     patientName: "John Smith",
