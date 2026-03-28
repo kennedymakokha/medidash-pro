@@ -128,7 +128,7 @@ export default function DepartmentsPage() {
 
   const handleDelete = async () => {
     if (!deleteDept) return;
-     await postDept({ ...deleteDept, isDeleted:true,uuid:deleteDept.uuid  }).unwrap();
+     await postDept({ ...deleteDept, isDeleted:true,uuid:(deleteDept as any).uuid  }).unwrap();
      refetch()
     toast({
       title: "Department Removed",
