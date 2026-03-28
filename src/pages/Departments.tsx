@@ -279,7 +279,7 @@ export default function DepartmentsPage() {
               {dept.head && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Stethoscope className="w-4 h-4" />
-                  <span>Head: {dept.head.name}</span>
+                  <span>Head: {typeof dept.head === 'object' ? dept.head?.name : dept.head}</span>
                 </div>
               )}
               <div className="flex items-center justify-between">
