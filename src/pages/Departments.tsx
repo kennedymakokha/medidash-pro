@@ -458,7 +458,7 @@ export default function DepartmentsPage() {
                   <h3 className="text-xl font-semibold">{viewDept.name}</h3>
                   {viewDept.head && (
                     <p className="text-muted-foreground">
-                      Head: {viewDept.head?.name}
+                      Head: {typeof viewDept.head === 'object' ? viewDept.head?.name : viewDept.head}
                     </p>
                   )}
                 </div>
