@@ -23,6 +23,7 @@ import ConsultationsPage from "./pages/Consultations";
 import LabTestsPage from "./pages/LabTests";
 import FinancePage from "./pages/Finance";
 import LabOrdersPage from "./pages/LabOrders";
+import PharmacyPage from "./pages/Pharmacy";
 import { ChatWidget } from "./components/chat/ChatWidget";
 
 const queryClient = new QueryClient();
