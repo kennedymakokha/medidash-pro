@@ -62,7 +62,7 @@ export function PrescriptionTable({ prescriptions, onView, onDispense }: Props) 
                     </Button>
                     {rx.status === "pending" && (
                       <Button size="icon" variant="ghost" onClick={() => onDispense(rx)} title="Dispense">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <CheckCircle className="w-4 h-4 text-success" />
                       </Button>
                     )}
                   </div>
