@@ -146,6 +146,14 @@ const navItems: NavItem[] = [
     implemented: true,
   },
   {
+    label: "Pharmacy",
+    href: "/pharmacy",
+    icon: Pill,
+    feature: "pharmacy",
+    roles: ["admin", "doctor", "nurse", "receptionist"],
+    implemented: true,
+  },
+  {
     label: "Reports",
     href: "/reports",
     icon: ClipboardList,
