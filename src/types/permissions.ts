@@ -15,4 +15,5 @@ export type Feature =
     | "vitals"
     | "beds"
     | "finance"
+    | "pharmacy"
     | "reports";

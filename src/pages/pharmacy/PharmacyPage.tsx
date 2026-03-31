@@ -183,7 +183,7 @@ export default function PharmacyPage() {
 
       <DeleteConfirmModal
         open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         onConfirm={handleDelete}
         title="Delete Medication"
         description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
