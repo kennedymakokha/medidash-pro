@@ -17,6 +17,7 @@ import {
   FileText,
   DollarSign,
   FlaskConical,
+  Pill,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -143,6 +144,14 @@ const navItems: NavItem[] = [
     icon: DollarSign,
     feature: "finance",
     roles: ["admin", "receptionist"],
+    implemented: true,
+  },
+  {
+    label: "Pharmacy",
+    href: "/pharmacy",
+    icon: Pill,
+    feature: "pharmacy",
+    roles: ["admin", "doctor", "nurse", "receptionist"],
     implemented: true,
   },
   {

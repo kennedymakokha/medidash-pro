@@ -23,6 +23,7 @@ import ConsultationsPage from "./pages/Consultations";
 import LabTestsPage from "./pages/LabTests";
 import FinancePage from "./pages/Finance";
 import LabOrdersPage from "./pages/LabOrders";
+import PharmacyPage from "./pages/Pharmacy";
 import { ChatWidget } from "./components/chat/ChatWidget";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/lab-tests" element={<LabTestsPage />} />
                 <Route path="/finance" element={<FinancePage />} />
                 <Route path="/lab-orders" element={<LabOrdersPage />} />
+                <Route path="/pharmacy" element={<PharmacyPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
