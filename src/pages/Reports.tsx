@@ -1,52 +1,47 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'; 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import {
-  Search,
-  Plus,
-  Download,
-  FileText,
-  Filter,
-  Calendar,
-  User,
-  FileBarChart,
-  FilePlus,
-  DollarSign,
-  ClipboardList,
+  Search, Plus, Download, FileText, Filter, User,
+  FileBarChart, FilePlus, DollarSign, ClipboardList,
 } from 'lucide-react';
 
-// --- Types & Role Configuration ---
+import {
+  useFetchvisitsQuery,
+  useFetchvisitlabordersQuery,
+} from '@/features/visitsSlice';
+
+import { TableSkeleton } from '@/components/loaders';
+
+// ---------------- TYPES ----------------
 
 interface Report {
   id: string;
@@ -59,6 +54,8 @@ interface Report {
   summary?: string;
 }
 
+// ---------------- ROLE PERMISSIONS ----------------
+
 const ROLE_PERMISSIONS: Record<string, Report['type'][]> = {
   admin: ['lab', 'radiology', 'discharge', 'prescription', 'general', 'billing'],
   doctor: ['lab', 'radiology', 'discharge', 'prescription', 'general'],
@@ -69,13 +66,7 @@ const ROLE_PERMISSIONS: Record<string, Report['type'][]> = {
   patient: ['lab', 'radiology', 'prescription', 'general'],
 };
 
-const mockReports: Report[] = [
-  { id: '1', title: 'Hematology Profile', type: 'lab', patientName: 'John Smith', doctorName: 'Dr. Michael Chen', date: '2024-01-20', status: 'completed', summary: 'WBC and RBC counts are normal. No signs of infection.' },
-  { id: '2', title: 'Chest X-Ray Results', type: 'radiology', patientName: 'Mary Johnson', doctorName: 'Dr. Sarah Lee', date: '2024-01-19', status: 'reviewed', summary: 'Clear lung fields. Normal heart size.' },
-  { id: '3', title: 'Surgery Discharge', type: 'discharge', patientName: 'Jennifer Davis', doctorName: 'Dr. Emily White', date: '2024-01-18', status: 'completed', summary: 'Patient stable post-op. Follow up in 2 weeks.' },
-  { id: '4', title: 'Inpatient Billing Summary', type: 'billing', patientName: 'Robert Williams', doctorName: 'Finance Dept', date: '2024-01-20', status: 'pending', summary: 'Total insurance coverage pending approval.' },
-  { id: '5', title: 'Annual Checkup Notes', type: 'general', patientName: 'David Brown', doctorName: 'Dr. James Wilson', date: '2024-01-21', status: 'completed', summary: 'Blood pressure slightly elevated. Suggested diet changes.' },
-];
+// ---------------- STYLES ----------------
 
 const typeStyles = {
   lab: { bg: 'bg-purple-100', color: 'text-purple-700', icon: FileBarChart },
@@ -86,297 +77,210 @@ const typeStyles = {
   billing: { bg: 'bg-emerald-100', color: 'text-emerald-700', icon: DollarSign },
 };
 
-// --- Main Component ---
+// ---------------- MAPPERS ----------------
+
+function mapVisitsToReports(visits: any[]): Report[] {
+  return visits.map((v: any) => {
+    const hasLab = v.labOrders && v.labOrders.length > 0;
+    const hasDiagnosis = !!v.diagnosis;
+
+    let status: Report['status'] = 'pending';
+    if (v.track === 'completed' || v.disposition) status = 'completed';
+    else if (v.diagnosis) status = 'reviewed';
+
+    return {
+      id: v._id ?? v.id ?? '',
+      title: hasDiagnosis
+        ? `Diagnosis: ${v.diagnosis}`
+        : hasLab
+        ? 'Lab Order Report'
+        : 'Visit Report',
+      type: hasLab ? 'lab' : 'general',
+      patientName: v.patientMongoose?.name ?? 'Unknown Patient',
+      doctorName: v.assignedDoctor?.name ?? 'Unassigned',
+      date: v.createdAt
+        ? new Date(v.createdAt).toISOString().split('T')[0]
+        : '',
+      status,
+      summary: v.notes ?? v.chiefComplaint ?? '',
+    };
+  });
+}
+
+function mapLabOrdersToReports(orders: any[]): Report[] {
+  return orders.map((o: any) => ({
+    id: o._id ?? o.uuid ?? '',
+    title: `Lab: ${o.testId?.testName ?? o.testName ?? 'Unknown Test'}`,
+    type: 'lab',
+    patientName:
+      o.visitId?.patientMongoose?.name ?? o.patientName ?? 'Unknown',
+    doctorName:
+      o.visitId?.assignedDoctor?.name ?? o.orderedBy ?? 'Unassigned',
+    date: o.createdAt
+      ? new Date(o.createdAt).toISOString().split('T')[0]
+      : '',
+    status: o.status === 'completed' ? 'completed' : 'pending',
+    summary: o.result ?? `${o.testName} - ${o.status}`,
+  }));
+}
+
+// ---------------- COMPONENT ----------------
 
 export default function ReportsPage() {
   const { userInfo: { user } } = useSelector((state: RootState) => state.auth);
   const userRole = user?.role || 'patient';
-  
-  const [reports, setReports] = useState<Report[]>(mockReports);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [viewReport, setViewReport] = useState<Report | null>(null);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const allowedTypes = ROLE_PERMISSIONS[userRole] || ['general'];
 
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [viewReport, setViewReport] = useState<Report | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
-    type: allowedTypes[0], 
+    type: allowedTypes[0],
     patientName: '',
     summary: '',
   });
 
-  // --- PDF Logic ---
-  const handleDownloadPDF = (report: Report) => {
-    const doc = new jsPDF();
-    
-    // Header styling
-    doc.setFillColor(249, 250, 251);
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setFontSize(22);
-    doc.setTextColor(17, 24, 39);
-    doc.text("MEDICAL REPORT", 14, 25);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(107, 114, 128);
-    doc.text(`Document ID: ${report.id}`, 14, 33);
-    doc.text(`Issued: ${new Date().toLocaleDateString()}`, 160, 33);
+  const [page] = useState(1);
 
-    // Metadata Table
-    autoTable(doc, {
-      startY: 50,
-      head: [['Category', 'Details']],
-      body: [
-        ['Report Title', report.title],
-        ['Report Type', report.type.toUpperCase()],
-        ['Patient Name', report.patientName],
-        ['Assigned Staff', report.doctorName],
-        ['Status', report.status.toUpperCase()],
-        ['Record Date', report.date],
-      ],
-      headStyles: { fillColor: [79, 70, 229] }, // Indigo
+  const { data: visitsData, isLoading: visitsLoading } =
+    useFetchvisitsQuery({ page, limit: 100, search: '', track: '' });
+
+  const { data: labsData, isLoading: labsLoading } =
+    useFetchvisitlabordersQuery({ page, limit: 100, search: '', status: '' });
+
+  const isLoading = visitsLoading || labsLoading;
+
+  const reports = useMemo(() => {
+    const visitReports = mapVisitsToReports(visitsData?.data ?? []);
+    const labReports = mapLabOrdersToReports(labsData?.data ?? []);
+
+    const seen = new Set<string>();
+    const combined: Report[] = [];
+
+    [...labReports, ...visitReports].forEach((r) => {
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        combined.push(r);
+      }
     });
 
-    // Findings Section
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
-    doc.setFontSize(14);
-    doc.setTextColor(17, 24, 39);
-    doc.text("Clinical Observations & Findings", 14, finalY);
+    return combined.sort((a, b) => b.date.localeCompare(a.date));
+  }, [visitsData, labsData]);
 
-    doc.setFontSize(11);
-    doc.setTextColor(55, 65, 81);
-    const splitText = doc.splitTextToSize(report.summary || "No notes recorded.", 180);
-    doc.text(splitText, 14, finalY + 10);
+  const handleDownloadPDF = (report: Report) => {
+    const doc = new jsPDF();
 
-    // Footer
-    doc.setFontSize(9);
-    doc.setTextColor(156, 163, 175);
-    doc.text("Generated via Hospital Management System - Internal Use Only", 105, 285, { align: 'center' });
+    doc.setFontSize(18);
+    doc.text("MEDICAL REPORT", 14, 20);
 
-    doc.save(`${report.patientName.replace(/\s+/g, '_')}_Report.pdf`);
-    toast({ title: "PDF Generated", description: "Report has been downloaded successfully." });
+    autoTable(doc, {
+      startY: 30,
+      head: [['Field', 'Value']],
+      body: [
+        ['Title', report.title],
+        ['Type', report.type],
+        ['Patient', report.patientName],
+        ['Doctor', report.doctorName],
+        ['Date', report.date],
+        ['Status', report.status],
+      ],
+    });
+
+    doc.text("Summary:", 14, (doc as any).lastAutoTable.finalY + 10);
+    doc.text(report.summary || "No notes", 14, (doc as any).lastAutoTable.finalY + 20);
+
+    doc.save(`${report.patientName}_report.pdf`);
+
+    toast({ title: 'Downloaded', description: 'PDF generated successfully' });
   };
 
-  // --- Filter Logic ---
-  const filteredReports = reports.filter((report) => {
-    const isTypeAllowed = allowedTypes.includes(report.type);
+  const filteredReports = reports.filter((r) => {
+    const isAllowed = allowedTypes.includes(r.type);
     const matchesSearch =
-      report.title.toLowerCase().includes(search.toLowerCase()) ||
-      report.patientName.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = typeFilter === 'all' || report.type === typeFilter;
-    
-    const isAuthorized = userRole === 'admin' 
-        ? true 
-        : userRole === 'patient' 
-            ? report.patientName === user?.name 
-            : true;
+      r.title.toLowerCase().includes(search.toLowerCase()) ||
+      r.patientName.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = typeFilter === 'all' || r.type === typeFilter;
 
-    return isTypeAllowed && matchesSearch && matchesFilter && isAuthorized;
+    const isAuthorized =
+      userRole === 'admin'
+        ? true
+        : userRole === 'patient'
+        ? r.patientName === user?.name
+        : true;
+
+    return isAllowed && matchesSearch && matchesFilter && isAuthorized;
   });
 
-  const handleCreate = () => {
-    const newReport: Report = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...formData,
-      type: formData.type as Report['type'],
-      doctorName: user?.name || 'System User',
-      date: new Date().toISOString().split('T')[0],
-      status: 'pending',
-    };
-    setReports([newReport, ...reports]);
-    toast({ title: 'Report Saved', description: `New ${formData.type} entry created successfully.` });
-    setCreateModalOpen(false);
-  };
+  if (isLoading) {
+    return <TableSkeleton rows={6} columns={3} />;
+  }
 
   return (
-    <DashboardLayout title="Medical Reports" subtitle={`Accessing as ${userRole.toUpperCase()}`}>
+    <DashboardLayout title="Medical Reports" subtitle={`Accessing as ${userRole}`}>
       
-      <div className="flex flex-col sm:flex-row gap-4 justify-between mb-8">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search reports..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 h-11 capitalize">
-                <Filter className="w-4 h-4" />
-                {typeFilter === 'all' ? 'All Records' : typeFilter}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem onClick={() => setTypeFilter('all')}>View All Allowed</DropdownMenuItem>
-              {allowedTypes.map((t) => (
-                <DropdownMenuItem key={t} onClick={() => setTypeFilter(t)} className="capitalize">
-                  {t}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      {/* SEARCH + FILTER */}
+      <div className="flex gap-4 mb-6">
+        <Input
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
 
-        {userRole !== 'patient' && (
-          <Button onClick={() => setCreateModalOpen(true)} className="gap-2 h-11 px-6 shadow-sm">
-            <Plus className="w-4 h-4" />
-            New Entry
-          </Button>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
+              {typeFilter}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setTypeFilter('all')}>
+              All
+            </DropdownMenuItem>
+            {allowedTypes.map((t) => (
+              <DropdownMenuItem key={t} onClick={() => setTypeFilter(t)}>
+                {t}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* GRID */}
+      <div className="grid md:grid-cols-3 gap-4">
         {filteredReports.map((report) => {
-          const config = typeStyles[report.type] || typeStyles.general;
+          const config = typeStyles[report.type];
           const Icon = config.icon;
+
           return (
-            <Card 
-              key={report.id} 
-              className="group hover:border-primary/50 transition-all cursor-pointer shadow-sm hover:shadow-md"
-              onClick={() => setViewReport(report)}
-            >
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <div className={cn("p-2.5 rounded-xl transition-colors", config.bg)}>
-                  <Icon className={cn("w-5 h-5", config.color)} />
+            <Card key={report.id}>
+              <CardHeader>
+                <div className="flex justify-between">
+                  <Icon className={config.color} />
+                  <Badge>{report.status}</Badge>
                 </div>
-                <Badge variant={report.status === 'pending' ? 'secondary' : 'default'} className="capitalize text-[10px]">
-                  {report.status}
-                </Badge>
+                <CardTitle>{report.title}</CardTitle>
               </CardHeader>
+
               <CardContent>
-                <CardTitle className="text-base mb-4 line-clamp-1">{report.title}</CardTitle>
-                <div className="space-y-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5" /> 
-                    <span className="text-foreground font-medium">{report.patientName}</span>
-                  </div>
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="w-full gap-2 text-xs"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadPDF(report);
-                    }}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download PDF
-                  </Button>
-                </div>
+                <p className="text-sm">{report.patientName}</p>
+
+                <Button
+                  className="mt-3 w-full"
+                  onClick={() => handleDownloadPDF(report)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
-
-      {/* --- View Modal --- */}
-      <Dialog open={!!viewReport} onOpenChange={(o) => !o && setViewReport(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Report Details</DialogTitle>
-          </DialogHeader>
-          {viewReport && (
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-2xl">
-                <div className={cn("p-3 rounded-xl", typeStyles[viewReport.type].bg)}>
-                  {(() => { const Icon = typeStyles[viewReport.type].icon; return <Icon className={cn("w-6 h-6", typeStyles[viewReport.type].color)} />; })()}
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg">{viewReport.title}</h4>
-                  <p className="text-sm text-muted-foreground capitalize">{viewReport.type} Report</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-y-4 text-sm px-2">
-                <div><p className="text-muted-foreground mb-1">Patient Name</p><p className="font-semibold text-base">{viewReport.patientName}</p></div>
-                <div><p className="text-muted-foreground mb-1">Attending Staff</p><p className="font-semibold text-base">{viewReport.doctorName}</p></div>
-                <div><p className="text-muted-foreground mb-1">Date Created</p><p className="font-semibold text-base">{viewReport.date}</p></div>
-                <div><p className="text-muted-foreground mb-1">Status</p><Badge className="capitalize">{viewReport.status}</Badge></div>
-              </div>
-
-              <div className="space-y-2 px-2">
-                <Label className="text-muted-foreground">Clinical Observations</Label>
-                <div className="p-4 bg-slate-50 rounded-xl text-sm leading-relaxed border italic">
-                  "{viewReport.summary || "No specific notes provided."}"
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button className="flex-1 gap-2" variant="default" onClick={() => handleDownloadPDF(viewReport)}>
-                  <Download className="w-4 h-4" /> Download Report
-                </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setViewReport(null)}>Close</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* --- Create Modal --- */}
-      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>Generate New Document</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-5 py-4">
-            <div className="space-y-2">
-              <Label>Document Title</Label>
-              <Input 
-                placeholder="e.g. Lab Results - Glucose" 
-                value={formData.title} 
-                onChange={(e) => setFormData({...formData, title: e.target.value})} 
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Report Category</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(v) => setFormData({...formData, type: v as any})}
-                >
-                  <SelectTrigger className="capitalize">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allowedTypes.map(t => (
-                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Patient Search</Label>
-                <Input 
-                  placeholder="Full Name" 
-                  value={formData.patientName} 
-                  onChange={(e) => setFormData({...formData, patientName: e.target.value})} 
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Findings / Summary</Label>
-              <Textarea 
-                placeholder="Describe clinical findings..."
-                rows={4}
-                value={formData.summary}
-                onChange={(e) => setFormData({...formData, summary: e.target.value})}
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>Discard</Button>
-            <Button onClick={handleCreate}>Save & Publish</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
