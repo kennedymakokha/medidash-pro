@@ -172,6 +172,7 @@ const navItems: NavItem[] = [
     feature: "pharmacy",
     roles: ["admin", "nurse"],
     implemented: true,
+  },
   {
     label: "Reports",
     href: "/reports",
