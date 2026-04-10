@@ -18,6 +18,7 @@ import { highlightText } from "@/utils/highlightText";
 import { DataTable } from "@/components/table/DataTable";
 import { useCreatepatientMutation } from "@/features/patientSlice";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -55,6 +56,7 @@ export function PatientTable({
 }: PatientTableProps) {
   const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
+    const navigate = useNavigate();
   const [deletePatientData, setDeletePatientData] = useState<Patient | null>(
     null,
   );
@@ -162,10 +164,16 @@ export function PatientTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => {setEditPatient(patient)}}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEditPatient(patient);
+                    }}
+                  >
                     <Recycle className="w-4 h-4 mr-2" /> New Visit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setViewPatient(patient)}>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/patients/${patient._id}`)}
+                  >
                     <Eye className="w-4 h-4 mr-2" /> View
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setEditPatient(patient)}>

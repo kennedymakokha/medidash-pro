@@ -11,7 +11,7 @@ import Doctors from "./pages/Doctors";
 import Vitals from "./pages/Vitals";
 import NotFound from "./pages/NotFound";
 import { store } from "./store";
-import { Provider } from 'react-redux';
+import { Provider } from "react-redux";
 import DepartmentsPage from "./pages/Departments";
 import PatientsPage from "./pages/Patients";
 import AppointmentsPage from "./pages/Appointments";
@@ -24,6 +24,9 @@ import LabTestsPage from "./pages/LabTests";
 import FinancePage from "./pages/Finance";
 import LabOrdersPage from "./pages/LabOrders";
 import { ChatWidget } from "./components/chat/ChatWidget";
+import PatientDetailsPage from "./pages/patientsDetails";
+import VisitReportPage from "./pages/visitDetails";
+import { SocketProvider } from "./contexts/SocketContext";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <AuthProvider>
+        <SocketProvider>
         <HospitalDataProvider>
           <TooltipProvider>
             <Toaster />
@@ -40,6 +44,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/patients" element={<PatientsPage />} />
+                <Route path="/patients/:id" element={<PatientDetailsPage />} />
+                <Route path="/visits/:id" element={<VisitReportPage />} />
                 <Route path="/appointments" element={<AppointmentsPage />} />
                 <Route path="/doctors" element={<Doctors />} />
                 <Route path="/departments" element={<DepartmentsPage />} />
@@ -59,6 +65,7 @@ const App = () => (
             </BrowserRouter>
           </TooltipProvider>
         </HospitalDataProvider>
+        </SocketProvider>
       </AuthProvider>
     </Provider>
   </QueryClientProvider>

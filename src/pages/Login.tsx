@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Heart,
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLoginMutation, usePostuserMutation } from "@/features/userSlice";
 import { setCredentials } from "@/store/authSlice";
 import { useDispatch } from "react-redux";
+import { useSocket } from "./../contexts/SocketContext";
 
 export default function Login() {
   const [phone_number, setPhone] = useState("0716017221");
@@ -38,7 +39,7 @@ export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const { socket } = useSocket();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -79,6 +80,19 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+  useEffect(() => {
+    if (!socket) return;
+    console.log(socket);
+    const onConnect = () => {
+      console.log("✅ Socket connected:", socket.id);
+      socket.emit("registerDevice", " user._id");
+    };
+    socket.on("connect", onConnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+    };
+  }, [socket]);
 
   return (
     <div className="min-h-screen flex">
