@@ -157,6 +157,22 @@ const navItems: NavItem[] = [
     implemented: true,
   },
   {
+    label: "Assign Bed",
+    href: "/assign-bed",
+    icon: BedDouble,
+    feature: "beds",
+    roles: ["admin", "nurse", "receptionist"],
+    requiresInpatient: true,
+    implemented: true,
+  },
+  {
+    label: "Dispense",
+    href: "/dispense",
+    icon: Tablets,
+    feature: "pharmacy",
+    roles: ["admin", "nurse"],
+    implemented: true,
+  {
     label: "Reports",
     href: "/reports",
     icon: ClipboardList,
