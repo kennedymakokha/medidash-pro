@@ -39,7 +39,7 @@ interface Staff {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone_number: string;
   role: "nurse" | "receptionist" | "technician" | "admin";
   department: any;
   status: "active" | "on-leave" | "inactive";
@@ -83,7 +83,7 @@ export default function StaffPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone_number: "",
     role: "nurse" as Staff["role"],
     department: null as any,
     status: "active" as Staff["status"],
@@ -92,48 +92,42 @@ export default function StaffPage() {
   const [postDoctor] = usePostuserMutation({});
 
   const handleSubmit = async () => {
-    if (editStaff) {
-      await postDoctor(formData).unwrap();
-      await refetch();
-      toast({
-        title: "Staff Updated",
-        description: "Staff member information has been updated.",
+    try {
+      if (editStaff) {
+        await postDoctor(formData).unwrap();
+        await refetch();
+        toast({
+          title: "Staff Updated",
+          description: "Staff member information has been updated.",
+        });
+        setEditStaff(null);
+      } else {
+        await postDoctor({
+          ...formData,
+        }).unwrap();
+        await refetch();
+        toast({
+          title: "Staff Added",
+          description: `${formData.name} has been added successfully.`,
+        });
+        setAddModalOpen(false);
+      }
+
+      setFormData({
+        name: "",
+        email: "",
+        phone_number: "",
+        role: "nurse",
+        department: null,
+        status: "active",
       });
-      setEditStaff(null);
-    } else {
-      await postDoctor({
-        ...formData,
-      }).unwrap();
-      await refetch();
+    } catch (error) {
       toast({
-        title: "Staff Added",
-        description: `${formData.name} has been added successfully.`,
+        title: "Staff Addition Failed",
+        variant: "destructive",
+        description: `${error.data.error ?? "something went wrong Kindly check your  inputs "}`,
       });
-      setAddModalOpen(false);
     }
-    // if (edit1Staff) {
-    //   await postDoctor(doctorData).unwrap()
-    //   await refetch()
-    //   toast({ title: 'Staff Updated', description: 'Staff member information has been updated.' });
-    //   setEditStaff(null);
-    // } else {
-    //   const newStaff: Staff = {
-    //     ...formData,
-    //     id: Date.now().toString(),
-    //     joinDate: new Date().toISOString().split('T')[0],
-    //   };
-    //   setStaff([newStaff, ...staff]);
-    //   toast({ title: 'Staff Added', description: `${formData.name} has been added successfully.` });
-    //   setAddModalOpen(false);
-    // }
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      role: "nurse",
-      department: null,
-      status: "active",
-    });
   };
 
   const handleDelete = () => {
@@ -151,7 +145,7 @@ export default function StaffPage() {
     setFormData({
       name: s.name,
       email: s.email,
-      phone: s.phone,
+      phone_number: s.phone_number,
       role: s.role,
       department: s.department,
       status: s.status,
@@ -336,13 +330,13 @@ export default function StaffPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>Phone Number</Label>
                 <Input
-                  value={formData.phone}
+                  value={formData.phone_number}
                   onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
+                    setFormData({ ...formData, phone_number: e.target.value })
                   }
-                  placeholder="Phone number"
+                  placeholder="phone number "
                 />
               </div>
             </div>
@@ -361,7 +355,8 @@ export default function StaffPage() {
                   <SelectContent>
                     <SelectItem value="nurse">Nurse</SelectItem>
                     <SelectItem value="receptionist">Receptionist</SelectItem>
-                    <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="lab_tech">Technician</SelectItem>
+                    <SelectItem value="finance">Cashier</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -404,7 +399,6 @@ export default function StaffPage() {
                   ))}
                 </SelectContent>
               </Select>
-             
             </div>
           </div>
           <DialogFooter>
@@ -456,8 +450,8 @@ export default function StaffPage() {
                   <p className="font-medium">{viewStaff.email}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Phone</p>
-                  <p className="font-medium">{viewStaff.phone}</p>
+                  <p className="text-muted-foreground">phone_number</p>
+                  <p className="font-medium">{viewStaff.phone_number}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Department</p>

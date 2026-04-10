@@ -10,22 +10,24 @@ export const patientApiSlice = apiSlice.injectEndpoints({
                 body: data
             })
         }),
-           updatelabtest: builder.mutation({
+        updatelabtest: builder.mutation({
             query: (data) => ({
                 url: `${USER_URL}/update-lab-order`,
                 method: "POST",
                 body: data
             })
         }),
-
+        FetchVisitReport: builder.query({
+            query: (visitId) => `${USER_URL}/${visitId}/report`
+        }),
         fetchvisits: builder.query({
-            query: ({ page, limit, search,track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&track=${track}`
+            query: ({ page, limit, search, track }) => `${USER_URL}?page=${page}&limit=${limit}&search=${search}&track=${track}`
         }),
         fetchvisitlaborders: builder.query({
             query: ({ page, limit, search }) => `${USER_URL}/lab-orders?page=${page}&limit=${limit}&search=${search}`
         }),
-         fetchlabOrdersForAVisit: builder.query({
-            query: ({ page, limit, search ,id }) => `${USER_URL}/lab-orders/${id}?page=${page}&limit=${limit}&search=${search}`
+        fetchlabOrdersForAVisit: builder.query({
+            query: ({ page, limit, search, id }) => `${USER_URL}/lab-orders/${id}?page=${page}&limit=${limit}&search=${search}`
         }),
 
 
@@ -37,8 +39,9 @@ export const {
     useFetchvisitsQuery,
     useFetchvisitlabordersQuery,
     useUpdatelabtestMutation,
-    useFetchlabOrdersForAVisitQuery
-    
+    useFetchlabOrdersForAVisitQuery,
+    useFetchVisitReportQuery
+
 
 
 } = patientApiSlice

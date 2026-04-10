@@ -41,13 +41,16 @@ interface NavItem {
   requiresInpatient?: boolean;
 }
 
+// 1. Ensure UserRole includes 'lab_tech' and 'finance' in your types file
+// 2. Update the navItems array:
+
 const navItems: NavItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
     feature: "dashboard",
-    roles: ["admin", "doctor", "nurse", "receptionist"],
+    roles: ["admin", "doctor", "nurse", "receptionist", "lab_tech", "finance"],
     implemented: true,
   },
   {
@@ -55,9 +58,45 @@ const navItems: NavItem[] = [
     href: "/patients",
     icon: Users,
     feature: "patients",
-    roles: ["admin", "doctor", "nurse", "receptionist"],
+    roles: ["admin", "doctor", "nurse", "receptionist", "lab_tech"],
     implemented: true,
   },
+  // --- LABORATORY SECTION ---
+  {
+    label: "Lab Requests",
+    href: "/lab-orders",
+    icon: FlaskConical,
+    feature: "staff", // Or "lab" if you have a specific feature key
+    roles: ["admin", "doctor", "nurse", "lab_tech"],
+    implemented: true,
+  },
+  {
+    label: "Lab Tests & Results",
+    href: "/lab-tests",
+    icon: TestTube,
+    feature: "staff",
+    roles: ["admin", "lab_tech"],
+    implemented: true,
+  },
+  // --- FINANCE SECTION ---
+  {
+    label: "Billing & Invoices",
+    href: "/finance",
+    icon: DollarSign,
+    feature: "finance",
+    roles: ["admin", "finance", "receptionist"],
+    implemented: true,
+  },
+  
+  {
+    label: "Expenses",
+    href: "/expenses",
+    icon: ClipboardList,
+    feature: "finance",
+    roles: ["admin", "finance"],
+    implemented: true,
+  },
+  // --- CLINICAL SECTION ---
   {
     label: "Appointments",
     href: "/appointments",
@@ -72,47 +111,6 @@ const navItems: NavItem[] = [
     icon: FileText,
     feature: "consultations",
     roles: ["admin", "doctor"],
-    implemented: true,
-  },
-  {
-    label: "Doctors",
-    href: "/doctors",
-    icon: Stethoscope,
-    feature: "doctors",
-    roles: ["admin", "receptionist"],
-    implemented: true,
-  },
-  {
-    label: "Departments",
-    href: "/departments",
-    icon: Building2,
-    feature: "departments",
-    roles: ["admin"],
-    implemented: true,
-  },
-  {
-    label: "Staff",
-    href: "/staff",
-    icon: UserPlus,
-    feature: "staff",
-    roles: ["admin"],
-    implemented: true,
-  },
-  {
-    label: "Lab Tests",
-    href: "/lab-tests",
-    icon: TestTube,
-    feature: "staff",
-    roles: ["admin", "doctor", "nurse"],
-    implemented: true,
-  },
-  {
-    label: "Patient Care",
-    href: "/patient-care",
-    icon: Heart,
-    feature: "patient-care",
-    roles: ["admin", "nurse"],
-    requiresInpatient: true,
     implemented: true,
   },
   {
@@ -178,11 +176,19 @@ const navItems: NavItem[] = [
     href: "/reports",
     icon: ClipboardList,
     feature: "reports",
-    roles: ["admin", "doctor"],
+    roles: ["admin", "doctor", "finance", "lab_tech"],
+    implemented: true,
+  },
+  // --- ADMIN SECTION ---
+  {
+    label: "Staff Management",
+    href: "/staff",
+    icon: UserPlus,
+    feature: "staff",
+    roles: ["admin"],
     implemented: true,
   },
 ];
-
 interface SidebarProps {
   onClose?: () => void;
 }
@@ -196,7 +202,10 @@ export function Sidebar({ onClose }: SidebarProps) {
   const { logout } = useAuth();
   const branch = user?.branch;
   const filteredNavItems = navItems.filter(
-    (item) => user && canAccessFeature(item.feature, user.role, branch),
+    (item) =>
+      user &&
+      canAccessFeature(item.feature, user.role, branch) &&
+      item.roles.includes(user.role),
   );
   const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     if (!item.implemented) {
@@ -234,7 +243,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             </div>
             <div>
               <h1 className="text-base lg:text-lg font-bold text-sidebar-foreground">
-                MediCare
+                LIFECARE
               </h1>
               <p className="text-[10px] lg:text-xs text-sidebar-foreground/60">
                 Hospital Management

@@ -1,66 +1,98 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Heart, Mail, Lock, ArrowRight, User2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/hospital';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { useLoginMutation } from '@/features/userSlice';
-import { setCredentials } from '@/store/authSlice';
-import { useDispatch } from 'react-redux';
-
-const roles: { value: UserRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Administrator', description: 'Full system access' },
-  { value: 'doctor', label: 'Doctor', description: 'Patient care & records' },
-  { value: 'nurse', label: 'Nurse', description: 'Patient monitoring' },
-  { value: 'receptionist', label: 'Receptionist', description: 'Appointments & check-in' },
-];
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Heart,
+  Mail,
+  Lock,
+  ArrowRight,
+  User2,
+  User,
+  Phone,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types/hospital";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useLoginMutation, usePostuserMutation } from "@/features/userSlice";
+import { setCredentials } from "@/store/authSlice";
+import { useDispatch } from "react-redux";
+import { useSocket } from "./../contexts/SocketContext";
 
 export default function Login() {
-  const [phone_number, setPhone] = useState('0716017221');
-  const [password, setPassword] = useState('+254716017221');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
+  const [phone_number, setPhone] = useState("0716017221");
+  const [password, setPassword] = useState("+254716017221");
+  const [postDoctor] = usePostuserMutation({});
+  const [item, setItem] = useState({
+    name: "",
+    phone_number: "0716017221",
+    role: "patient",
+    password: "+254716017221",
+    confirm_password: "",
+  });
+  const [selectedRole, setSelectedRole] = useState<UserRole>("admin");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegisterimg, setIsRegisterimg] = useState(false);
   const [login, isFetching] = useLoginMutation({});
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const { socket } = useSocket();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       // const success = await login(email, password, selectedRole);
-
-      const res = await login({ phone_number: phone_number, password: password }).unwrap();
-      dispatch(setCredentials({ ...res }))
-      // if (res) {
+      if (isRegisterimg) {
+        await postDoctor(item).unwrap();
         toast({
-          title: 'Welcome back!',
+          title: "Success",
+          description: `Registered  suucessfully `,
+        });
+        setIsRegisterimg(false);
+      } else {
+        const res = await login(item).unwrap();
+        dispatch(setCredentials({ ...res }));
+        // if (res) {
+        toast({
+          title: "Welcome back!",
           description: `Logged in as ${selectedRole}`,
         });
-      navigate('/dashboard');
-      // } else {
-      //   toast({
-      //     title: 'Login failed',
-      //     description: 'Invalid credentials. Password must be at least 4 characters.',
-      //     variant: 'destructive',
-      //   });
-      // }
+        navigate("/dashboard");
+        // } else {
+        //   toast({
+        //     title: 'Login failed',
+        //     description: 'Invalid credentials. Password must be at least 4 characters.',
+        //     variant: 'destructive',
+        //   });
+        // }
+      }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+  useEffect(() => {
+    if (!socket) return;
+    console.log(socket);
+    const onConnect = () => {
+      console.log("✅ Socket connected:", socket.id);
+      socket.emit("registerDevice", " user._id");
+    };
+    socket.on("connect", onConnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+    };
+  }, [socket]);
 
   return (
     <div className="min-h-screen flex">
@@ -74,18 +106,25 @@ export default function Login() {
               <Heart className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-sidebar-foreground">MediCare</h1>
-              <p className="text-sm text-sidebar-foreground/60">Hospital Management System</p>
+              <h1 className="text-2xl font-bold text-sidebar-foreground">
+                LIFECARE
+              </h1>
+              <p className="text-sm text-sidebar-foreground/60">
+                Hospital Management System
+              </p>
             </div>
           </div>
         </div>
 
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-bold text-sidebar-foreground leading-tight">
-            Streamline Your<br />Hospital Operations
+            Streamline Your
+            <br />
+            Hospital Operations
           </h2>
           <p className="text-lg text-sidebar-foreground/70 max-w-md">
-            Manage patients, appointments, staff, and departments all in one powerful platform designed for modern healthcare.
+            Manage patients, appointments, staff, and departments all in one
+            powerful platform designed for modern healthcare.
           </p>
           <div className="flex items-center gap-4 pt-4">
             <div className="flex -space-x-2">
@@ -99,13 +138,18 @@ export default function Login() {
               ))}
             </div>
             <p className="text-sm text-sidebar-foreground/70">
-              <span className="font-semibold text-sidebar-foreground">500+</span> healthcare professionals trust us
+              <span className="font-semibold text-sidebar-foreground">
+                500+
+              </span>{" "}
+              healthcare professionals trust us
             </p>
           </div>
         </div>
 
         <div className="relative z-10">
-          <p className="text-xs text-sidebar-foreground/40">© 2024 MediCare. All rights reserved.</p>
+          <p className="text-xs text-sidebar-foreground/40">
+            © 2024 LIFECARE. All rights reserved.
+          </p>
         </div>
       </div>
 
@@ -117,48 +161,53 @@ export default function Login() {
               <div className="p-3 rounded-2xl gradient-primary">
                 <Heart className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">MediCare</h1>
+              <h1 className="text-2xl font-bold text-foreground">LIFECARE</h1>
             </div>
-            <h2 className="text-3xl font-bold text-foreground">Welcome back</h2>
+            <h2 className="text-3xl font-bold text-foreground">
+              {isRegisterimg ? "Register" : "Welcome back"}
+            </h2>
             <p className="mt-2 text-muted-foreground">
-              Sign in to access your dashboard
+              {isRegisterimg ? "" : "Sign in to access your dashboard"}
             </p>
           </div>
 
-          {/* Role Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Select your role</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {roles.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => setSelectedRole(role.value)}
-                  className={cn(
-                    "p-4 rounded-xl border-2 text-left transition-all duration-200",
-                    selectedRole === role.value
-                      ? "border-primary bg-accent"
-                      : "border-border hover:border-primary/50 hover:bg-muted"
-                  )}
-                >
-                  <p className="font-semibold text-sm text-foreground">{role.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-5">
+            {isRegisterimg && (
+              <div className="space-y-2">
+                <Label htmlFor="phone_number">Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    placeholder="james  Kennedy"
+                    value={item.name}
+                    onChange={(e) =>
+                      setItem((pre) => ({
+                        ...pre,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="pl-11 h-12"
+                    required
+                  />
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="phone_number">Phone Number</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="phone_number"
                   type="numeric"
                   placeholder="you@hospital.com"
-                  value={phone_number}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={item.phone_number}
+                  onChange={(e) =>
+                    setItem((pre) => ({
+                      ...pre,
+                      phone_number: e.target.value,
+                    }))
+                  }
                   className="pl-11 h-12"
                   required
                 />
@@ -173,13 +222,40 @@ export default function Login() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={item.password}
+                  onChange={(e) =>
+                    setItem((pre) => ({
+                      ...pre,
+                      password: e.target.value,
+                    }))
+                  }
                   className="pl-11 h-12"
                   required
                 />
               </div>
             </div>
+            {isRegisterimg && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={item.confirm_password}
+                    onChange={(e) =>
+                      setItem((pre) => ({
+                        ...pre,
+                        confirm_password: e.target.value,
+                      }))
+                    }
+                    className="pl-11 h-12"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -200,14 +276,20 @@ export default function Login() {
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
               ) : (
                 <>
-                  Sign in
+                  {isRegisterimg ? "Register User" : "Sign in"}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
+            <span
+              className={`pointer-cursor float-right ${isRegisterimg ? "border px-2 px-1" : ""}`}
+              onClick={() => setIsRegisterimg(!isRegisterimg)}
+            >
+              {isRegisterimg
+                ? "Login"
+                : "I dont have an account click to Register"}
+            </span>
           </form>
-
-
         </div>
       </div>
     </div>

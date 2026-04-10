@@ -91,7 +91,7 @@ export function StaffTable({
                                 <div>
                                     <p className="font-medium">{member.name}</p>
                                     <p className="text-sm text-muted-foreground md:hidden">
-                                        {member.phone}
+                                        {member.phone_number}
                                     </p>
                                 </div>
                             </div>
@@ -101,7 +101,7 @@ export function StaffTable({
                         <td className="hidden md:table-cell px-6 py-4">
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <Phone className="w-3 h-3" />
-                                {member.phone}
+                                {member.phone_number}
                             </div>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                 <Mail className="w-3 h-3" />

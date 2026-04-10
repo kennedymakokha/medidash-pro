@@ -3,8 +3,14 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+
+
+
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -16,7 +22,9 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import {
   Search, Plus, MoreHorizontal, Eye, Download, FileText, Filter,
   Calendar, User, Stethoscope, FileBarChart, FilePlus, ClipboardList,
@@ -25,10 +33,19 @@ import { useFetchvisitsQuery, useFetchvisitlabordersQuery } from '@/features/vis
 import { useFetchpatientsQuery } from '@/features/patientSlice';
 import { TableSkeleton } from '@/components/loaders';
 
+import {
+  useFetchvisitsQuery,
+  useFetchvisitlabordersQuery,
+} from '@/features/visitsSlice';
+
+import { TableSkeleton } from '@/components/loaders';
+
+// ---------------- TYPES ----------------
+
 interface Report {
   id: string;
   title: string;
-  type: 'lab' | 'radiology' | 'discharge' | 'prescription' | 'general';
+  type: 'lab' | 'radiology' | 'discharge' | 'prescription' | 'general' | 'billing';
   patientName: string;
   doctorName: string;
   date: string;
@@ -42,12 +59,15 @@ const statusStyles = {
   reviewed: 'bg-primary/10 text-primary border-primary/20',
 };
 
+// ---------------- STYLES ----------------
+
 const typeStyles = {
-  lab: { bg: 'bg-primary/10', color: 'text-primary', icon: FileBarChart },
-  radiology: { bg: 'bg-warning/10', color: 'text-warning', icon: FileText },
-  discharge: { bg: 'bg-success/10', color: 'text-success', icon: ClipboardList },
-  prescription: { bg: 'bg-accent', color: 'text-accent-foreground', icon: FilePlus },
-  general: { bg: 'bg-muted', color: 'text-foreground', icon: FileText },
+  lab: { bg: 'bg-purple-100', color: 'text-purple-700', icon: FileBarChart },
+  radiology: { bg: 'bg-orange-100', color: 'text-orange-700', icon: FileText },
+  discharge: { bg: 'bg-green-100', color: 'text-green-700', icon: ClipboardList },
+  prescription: { bg: 'bg-pink-100', color: 'text-pink-700', icon: FilePlus },
+  general: { bg: 'bg-slate-100', color: 'text-slate-700', icon: FileText },
+  billing: { bg: 'bg-emerald-100', color: 'text-emerald-700', icon: DollarSign },
 };
 
 function mapVisitsToReports(visits: any[]): Report[] {
@@ -88,7 +108,7 @@ function mapLabOrdersToReports(orders: any[]): Report[] {
 
 export default function ReportsPage() {
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [viewReport, setViewReport] = useState<Report | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [page] = useState(1);
@@ -122,14 +142,7 @@ export default function ReportsPage() {
     title: '', type: 'general' as Report['type'], patientName: '', summary: '',
   });
 
-  const filteredReports = reports.filter((report) => {
-    const matchesSearch =
-      report.title.toLowerCase().includes(search.toLowerCase()) ||
-      report.patientName.toLowerCase().includes(search.toLowerCase()) ||
-      report.doctorName.toLowerCase().includes(search.toLowerCase());
-    const matchesType = typeFilter === 'all' || report.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  const [page] = useState(1);
 
   const handleCreate = () => {
     toast({ title: 'Report Created', description: `${formData.title} has been created.` });
@@ -137,16 +150,75 @@ export default function ReportsPage() {
     setFormData({ title: '', type: 'general', patientName: '', summary: '' });
   };
 
-  const handleDownload = (report: Report) => {
-    toast({ title: 'Downloading', description: `Downloading ${report.title}...` });
+  const { data: labsData, isLoading: labsLoading } =
+    useFetchvisitlabordersQuery({ page, limit: 100, search: '', status: '' });
+
+  const isLoading = visitsLoading || labsLoading;
+
+  const reports = useMemo(() => {
+    const visitReports = mapVisitsToReports(visitsData?.data ?? []);
+    const labReports = mapLabOrdersToReports(labsData?.data ?? []);
+
+    const seen = new Set<string>();
+    const combined: Report[] = [];
+
+    [...labReports, ...visitReports].forEach((r) => {
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        combined.push(r);
+      }
+    });
+
+    return combined.sort((a, b) => b.date.localeCompare(a.date));
+  }, [visitsData, labsData]);
+
+  const handleDownloadPDF = (report: Report) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("MEDICAL REPORT", 14, 20);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['Field', 'Value']],
+      body: [
+        ['Title', report.title],
+        ['Type', report.type],
+        ['Patient', report.patientName],
+        ['Doctor', report.doctorName],
+        ['Date', report.date],
+        ['Status', report.status],
+      ],
+    });
+
+    doc.text("Summary:", 14, (doc as any).lastAutoTable.finalY + 10);
+    doc.text(report.summary || "No notes", 14, (doc as any).lastAutoTable.finalY + 20);
+
+    doc.save(`${report.patientName}_report.pdf`);
+
+    toast({ title: 'Downloaded', description: 'PDF generated successfully' });
   };
 
-  const stats = {
-    total: reports.length,
-    pending: reports.filter((r) => r.status === 'pending').length,
-    completed: reports.filter((r) => r.status === 'completed').length,
-    reviewed: reports.filter((r) => r.status === 'reviewed').length,
-  };
+  const filteredReports = reports.filter((r) => {
+    const isAllowed = allowedTypes.includes(r.type);
+    const matchesSearch =
+      r.title.toLowerCase().includes(search.toLowerCase()) ||
+      r.patientName.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = typeFilter === 'all' || r.type === typeFilter;
+
+    const isAuthorized =
+      userRole === 'admin'
+        ? true
+        : userRole === 'patient'
+        ? r.patientName === user?.name
+        : true;
+
+    return isAllowed && matchesSearch && matchesFilter && isAuthorized;
+  });
+
+  if (isLoading) {
+    return <TableSkeleton rows={6} columns={3} />;
+  }
 
   return (
     <DashboardLayout title="Reports" subtitle="View and manage medical reports">

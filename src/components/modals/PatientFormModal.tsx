@@ -11,7 +11,7 @@ interface PatientFormModalProps {
   onOpenChange: (open: boolean) => void;
   patient?: Patient | null;
   onSubmit: (patient: Patient) => void;
-  mode: "add" | "edit";
+  mode: "add" | "edit" |"new-visit";
 }
 
 const defaultForm = {
