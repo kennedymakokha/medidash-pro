@@ -18,6 +18,22 @@ import {
   DollarSign,
   FlaskConical,
   Pill,
+  BedDouble,
+  Tablets,
+  ClipboardList,
+  Building2,
+  Settings,
+  LogOut,
+  Heart,
+  Stethoscope,
+  Activity,
+  Bed,
+  X,
+  TestTube,
+  FileText,
+  DollarSign,
+  FlaskConical,
+  Pill,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
