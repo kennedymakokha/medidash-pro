@@ -18,6 +18,8 @@ import {
   DollarSign,
   FlaskConical,
   Pill,
+  BedDouble,
+  Tablets,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -152,6 +154,23 @@ const navItems: NavItem[] = [
     icon: Pill,
     feature: "pharmacy",
     roles: ["admin", "doctor", "nurse", "receptionist"],
+    implemented: true,
+  },
+  {
+    label: "Assign Bed",
+    href: "/assign-bed",
+    icon: BedDouble,
+    feature: "beds",
+    roles: ["admin", "nurse", "receptionist"],
+    requiresInpatient: true,
+    implemented: true,
+  },
+  {
+    label: "Dispense",
+    href: "/dispense",
+    icon: Tablets,
+    feature: "pharmacy",
+    roles: ["admin", "nurse"],
     implemented: true,
   },
   {
