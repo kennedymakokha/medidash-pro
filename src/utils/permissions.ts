@@ -22,6 +22,7 @@ export const canAccessFeature = (
       "vitals",
       "beds",
       "finance",
+      "pharmacy",
       "reports",
     ],
     doctor: [

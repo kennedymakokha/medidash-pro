@@ -44,13 +44,18 @@ import { DataTable } from "@/components/table/DataTable";
 import { LabOrdersTable } from "@/components/dashboard/LabOrderTable";
 
 interface LabOrder {
-  id: string;
-  patientName: string;
-  patientId: string;
-  testName: string;
-  category: string;
-  orderedBy: string;
-  orderedAt: string;
+  id?: string;
+  _id?: string;
+  uuid?: string;
+  patientName?: string;
+  patientId?: any;
+  testId?: any;
+  testName?: string;
+  category?: string;
+  orderedBy?: string;
+  orderedAt?: string;
+  createdAt?: string;
+  visitId?: any;
   status: "pending" | "in-progress" | "completed" | "cancelled";
   priority: "routine" | "urgent" | "stat";
   result?: string;

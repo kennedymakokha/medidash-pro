@@ -17,8 +17,13 @@ export const bedApiSlice = apiSlice.injectEndpoints({
         fetchbedsoverviews: builder.query({
             query: () => `${USER_URL}/overview`
         }),
-
-
+        assignBed: builder.mutation({
+            query: (data) => ({
+                url: `${USER_URL}/assign`,
+                method: "POST",
+                body: data
+            })
+        }),
     })
 })
 
@@ -26,5 +31,5 @@ export const {
     useCreatebedMutation,
     useFetchbedsQuery,
     useFetchbedsoverviewsQuery,
-
+    useAssignBedMutation,
 } = bedApiSlice

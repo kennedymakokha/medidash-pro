@@ -16,15 +16,12 @@ interface Props {
   onNext: (c: Consultation) => void;
   onView: (c: Consultation) => void;
   onEdit: (c: Consultation) => void;
+  status?: string;
 }
 
-export function ConsultationCard({
-  consultation,
-  onNext,
-  onView,
-  onEdit,
-}: Props) {
+export function ConsultationCard({ consultation, onNext, onView, onEdit }: Props) {
   const style = stageStyles[consultation.track] ?? stageStyles["pre-lab"];
+  const c = consultation as any;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -33,7 +30,7 @@ export function ConsultationCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold truncate">
-                {consultation?.patientMongoose?.name || "Unknown Patient"}
+                {c?.patientMongoose?.name || "Unknown Patient"}
               </h3>
               <Badge className={style.bg}>{style.label}</Badge>
             </div>
@@ -42,96 +39,56 @@ export function ConsultationCard({
               {consultation.chiefComplaint || "No complaint recorded"}
             </p>
 
-            {/* ===== TRACK BASED CONTENT ===== */}
+            <div className="mt-3 text-xs space-y-1 bg-muted/40 p-2 rounded-md">
+              <p className="font-medium">Vitals</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <span>BP: {c?.bp ?? "--"}</span>
+                <span>Temp: {c?.temperature ?? "--"}°C</span>
+                <span>Pulse: {c?.pulse ?? "--"} bpm</span>
+                <span>SpO₂: {c?.oxygenSaturation ?? "--"}%</span>
+              </div>
+            </div>
 
-            {/* PRE-LAB → VITALS */}
-           
+            {c?.labResults?.length > 0 && (
               <div className="mt-3 text-xs space-y-1 bg-muted/40 p-2 rounded-md">
-                <p className="font-medium">Vitals</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <span>BP: {consultation?.bp ?? "--"}</span>
-                  <span>Temp: {consultation?.temperature ?? "--"}°C</span>
-                  <span>Pulse: {consultation?.pulse ?? "--"} bpm</span>
-                  <span>SpO₂: {consultation?.oxygenSaturation ?? "--"}%</span>
+                <p className="font-medium">Lab Results</p>
+                <div className="flex flex-wrap gap-1">
+                  {c.labResults.slice(0, 3).map((lab: any, i: number) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {lab.testName}: {lab.result}
+                    </Badge>
+                  ))}
+                  {c.labResults.length > 3 && (
+                    <Badge variant="outline" className="text-xs">+{c.labResults.length - 3}</Badge>
+                  )}
                 </div>
               </div>
-           
-
-            {/* POST-LAB → LAB RESULTS */}
-            {
-              consultation?.labResults?.length > 0 && (
-                <div className="mt-3 text-xs space-y-1 bg-muted/40 p-2 rounded-md">
-                  <p className="font-medium">Lab Results</p>
-                  <div className="flex flex-wrap gap-1">
-                    {consultation?.labResults.slice(0, 3).map((lab, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {lab.testName}: {lab.result}
-                      </Badge>
-                    ))}
-                    {consultation?.labResults.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{consultation?.labResults.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* COMPLETED → MEDICINES */}
-            {
-              consultation?.medicines?.length > 0 && (
-                <div className="mt-3 text-xs space-y-1 bg-muted/40 p-2 rounded-md">
-                  <p className="font-medium">Medicines</p>
-                  <div className="flex flex-wrap gap-1">
-                    {consultation?.medicines.slice(0, 3).map((med, i) => (
-                      <Badge key={i} variant="default" className="text-xs">
-                        {med.name}
-                      </Badge>
-                    ))}
-                    {consultation?.medicines.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{consultation.medicines.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-          </div>
-
-          {/* RIGHT ACTIONS */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onView(consultation)}
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(consultation)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-
-            {consultation.track === "pre-lab" && (
-              <Button
-                size="sm"
-                onClick={() => onNext(consultation)}
-                className="gap-1"
-              >
-                Next <ArrowRight className="w-3 h-3" />
-              </Button>
             )}
 
-            {consultation.track === "post-lab" && (
-              <Button
-                size="sm"
-                onClick={() => onNext(consultation)}
-                className="gap-1"
-              >
+            {c?.medicines?.length > 0 && (
+              <div className="mt-3 text-xs space-y-1 bg-muted/40 p-2 rounded-md">
+                <p className="font-medium">Medicines</p>
+                <div className="flex flex-wrap gap-1">
+                  {c.medicines.slice(0, 3).map((med: any, i: number) => (
+                    <Badge key={i} variant="default" className="text-xs">{med.name}</Badge>
+                  ))}
+                  {c.medicines.length > 3 && (
+                    <Badge variant="outline" className="text-xs">+{c.medicines.length - 3}</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => onView(consultation)}>
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(consultation)}>
+              <Edit className="w-4 h-4" />
+            </Button>
+            {(consultation.track === "pre-lab" || consultation.track === "post-lab") && (
+              <Button size="sm" onClick={() => onNext(consultation)} className="gap-1">
                 Next <ArrowRight className="w-3 h-3" />
               </Button>
             )}

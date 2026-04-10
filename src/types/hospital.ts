@@ -87,10 +87,13 @@ export interface StatsCard {
 
 export interface Department {
   _id: string;
+  uuid?: string;
   name: string;
-  head?: string;
+  head?: any;
   staffCount?: number;
   patientCount?: number;
+  staffs?: any[];
+  patients?: any[];
   fee?: number;
   consultationFee?: number;
 }
