@@ -14,7 +14,7 @@ const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 interface FormData {
   name: string;
-  dob: Date | null;
+  dob: string;
   sex: "male" | "female" | "other";
   phone: string;
   address: string;
@@ -38,8 +38,8 @@ interface Props {
 }
 
 export function PatientFormFields({ formData, onChange, doctors }: Props) {
-  const dobString = formData.dob ? formData.dob.toISOString() : undefined;
-  const age = calculateAge(dobString);
+  // const dobString = formData.dob ? formData.dob.toISOString() : undefined;
+  // const age = calculateAge(dobString);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -48,7 +48,7 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
         <Input value={formData.name} onChange={(e) => onChange({ ...formData, name: e.target.value })} required />
       </div>
 
-      <div>
+      {/* <div>
         <Label>Date of Birth</Label>
         <Popover>
           <PopoverTrigger asChild>
@@ -68,7 +68,19 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
             />
           </PopoverContent>
         </Popover>
-      </div>
+      </div> */}
+     <div>
+  <label className="block text-sm font-medium text-gray-700">
+    Date of Birth <span className="text-red-500">*</span> 
+  </label>
+  <input
+    type="date"
+    value={formData.dob}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+    onChange={(e) => onChange({ ...formData, dob: e.target.value })}
+    
+  />
+</div>
 
       <div>
         <Label>Gender</Label>
@@ -87,9 +99,9 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
         <Input
           value={formData.phone}
           type="tel"
-          placeholder={(age ?? 0) > 18 ? "07160181616" : "Guardian's phone Number"}
+          placeholder= "07160181616" 
           onChange={(e) => onChange({ ...formData, phone: Format_phone_number(e.target.value) })}
-          required={(age ?? 0) > 18}
+         
         />
       </div>
 
@@ -108,7 +120,7 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
         <Input value={formData.address} onChange={(e) => onChange({ ...formData, address: e.target.value })} required />
       </div>
 
-      {(age ?? 0) > 18 && (
+     
         <div>
           <Label>National ID</Label>
           <Input
@@ -118,7 +130,7 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
             onChange={(e) => onChange({ ...formData, nationalId: e.target.value })}
           />
         </div>
-      )}
+      
 
       <div>
         <Label>Assigned Doctor</Label>
@@ -133,7 +145,7 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
       </div>
 
       <hr className="col-span-2" />
-      {(age ?? 0) > 18 && (
+    
         <>
           <div>
             <Label>Next Of Kin</Label>
@@ -153,7 +165,7 @@ export function PatientFormFields({ formData, onChange, doctors }: Props) {
               required={(formData?.nokRelationship?.length ?? 0) > 0} />
           </div>
         </>
-      )}
+     
     </div>
   );
 }

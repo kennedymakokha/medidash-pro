@@ -34,24 +34,10 @@ export function PostLabActionDialog({
 
         <div className="py-4 text-sm text-muted-foreground">
           Patient has completed laboratory tests.
-          <br />
-          Where should the patient go next?
+       
         </div>
 
-        <DialogFooter className="flex gap-2 justify-end">
-          <Button
-            variant="secondary"
-            onClick={() => onWard(consultation)}
-          >
-            Send to Ward
-          </Button>
-
-          <Button
-            onClick={() => onPharmacy(consultation)}
-          >
-            Send to Pharmacy
-          </Button>
-        </DialogFooter>
+        
       </DialogContent>
     </Dialog>
   );
