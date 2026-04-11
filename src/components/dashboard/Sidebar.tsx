@@ -88,14 +88,14 @@ const navItems: NavItem[] = [
     implemented: true,
   },
   
-  {
-    label: "Expenses",
-    href: "/expenses",
-    icon: ClipboardList,
-    feature: "finance",
-    roles: ["admin", "finance"],
-    implemented: true,
-  },
+  // {
+  //   label: "Expenses",
+  //   href: "/expenses",
+  //   icon: ClipboardList,
+  //   feature: "finance",
+  //   roles: ["admin", "finance"],
+  //   implemented: true,
+  // },
   // --- CLINICAL SECTION ---
   {
     label: "Appointments",
@@ -121,15 +121,15 @@ const navItems: NavItem[] = [
     roles: ["admin", "nurse", "doctor"],
     implemented: true,
   },
-  {
-    label: "Bed Management",
-    href: "/beds",
-    icon: Bed,
-    feature: "beds",
-    roles: ["admin", "nurse", "receptionist"],
-    requiresInpatient: true,
-    implemented: true,
-  },
+  // {
+  //   label: "Bed Management",
+  //   href: "/beds",
+  //   icon: Bed,
+  //   feature: "beds",
+  //   roles: ["admin", "nurse", "receptionist"],
+  //   requiresInpatient: true,
+  //   implemented: true,
+  // },
   {
     label: "Lab Orders",
     href: "/lab-orders",
@@ -138,14 +138,14 @@ const navItems: NavItem[] = [
     roles: ["admin", "doctor", "nurse"],
     implemented: true,
   },
-  {
-    label: "Finance",
-    href: "/finance",
-    icon: DollarSign,
-    feature: "finance",
-    roles: ["admin", "receptionist"],
-    implemented: true,
-  },
+  // {
+  //   label: "Finance",
+  //   href: "/finance",
+  //   icon: DollarSign,
+  //   feature: "finance",
+  //   roles: ["admin", "receptionist"],
+  //   implemented: true,
+  // },
   {
     label: "Pharmacy",
     href: "/pharmacy",

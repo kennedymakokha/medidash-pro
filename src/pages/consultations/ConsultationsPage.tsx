@@ -15,21 +15,35 @@ import {
 } from "@/features/visitsSlice";
 import { ConsultationSkeleton } from "@/components/loaders";
 import { PostLabActionDialog } from "./Components/postlabModal";
+import { MedicationFormDialog } from "./Components/medicationFormDialog";
+import { useFetchMedicationsQuery } from "@/features/pharmacySlice";
+import { Medication } from "@/types/pharmacy";
 
 export default function ConsultationsPage() {
   const { data, isLoading, track, setTrack, refetch } = useConsultations();
   const consultations = data?.data ?? [];
-
+  // API hooks
+  const {
+    data: medsData,
+    isLoading: medsLoading,
+    refetch: refetchMeds,
+  } = useFetchMedicationsQuery({
+    page: 1,
+    limit: 10000,
+    search: "",
+    status: "",
+  });
   const { data: consultationData } = useFetchvisitsQuery({
     page: 1,
     limit: 200000000,
   });
-  console.log("CONXA", consultationData);
+
   const [postLabModalOpen, setPostLabModalOpen] = useState(false);
   const [postLabConsultation, setPostLabConsultation] =
     useState<Consultation | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isMedicationModalOpen, setIsMedicationModalOpen] = useState(false);
   const [selectedConsultation, setSelectedConsultation] =
     useState<Consultation | null>(null);
   const [editingConsultation, setEditingConsultation] =
@@ -50,7 +64,7 @@ export default function ConsultationsPage() {
 
     uuid: "",
     patientId: "",
-    visitId: "6999497219b19c52e5c82ef6",
+    visitId: "",
     patientMongoose: "",
     orderedBy: "",
     symptoms: "",
@@ -71,6 +85,18 @@ export default function ConsultationsPage() {
       await refetchLO();
       setPostLabConsultation(data);
       setPostLabModalOpen(true);
+      setFormData({
+        uuid: data?.uuid,
+        patientId: data?.patientMongoose,
+        visitId: data?._id,
+        patientMongoose: data?.patientMongoose,
+        orderedBy: data?.assignedDoctor?._id ?? "",
+        chiefComplaint: "",
+        symptoms: "",
+        prescribedTests: [],
+        notes: "",
+        orderedAt: Date(),
+      });
       return;
     }
     setFormData({
@@ -97,13 +123,36 @@ export default function ConsultationsPage() {
     setPostLabModalOpen(false);
   };
 
-  const handleSendToPharmacy = async (consultation: Consultation) => {
-    toast({
-      title: "Patient sent to pharmacy",
-      description: "Medication billing started.",
-    });
+  const handleSendToPharmacy = async (formPayload, totalFee) => {
+    try {
+      await postConsultation({
+        // 🔹 Parent metadata
+        uuid: formData.uuid,
+        visitId: formData.visitId,
+        patientId: formData.patientId,
+        patientMongoose: formData.patientMongoose,
+        track: "med_billing",
+        status: "pending",
+        medFee: totalFee,
+        medications: formPayload.prescribedMedications.map((t) => t._id),
+      }).unwrap();
 
-    setPostLabModalOpen(false);
+      await refetch();
+
+      toast({
+        title: "Medication Staged",
+        description: "Consultation started.",
+      });
+
+      setIsMedicationModalOpen(false);
+    } catch (error) {
+      alert(JSON.stringify(error));
+      toast({
+        title: "Error",
+        description: "Failed to save consultation.",
+        variant: "destructive",
+      });
+    }
   };
   const handleView = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
@@ -131,6 +180,13 @@ export default function ConsultationsPage() {
         onEdit={() => console.log("object")}
       />
 
+      <MedicationFormDialog
+        open={isMedicationModalOpen}
+        onClose={() => setIsMedicationModalOpen(false)}
+        initialData={{ uuid: "", prescribedMedications: [] }}
+        medications={medsData?.data ?? []}
+        onSubmit={handleSendToPharmacy}
+      />
       <ConsultationFormDialog
         open={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
@@ -191,7 +247,7 @@ export default function ConsultationsPage() {
         onClose={() => setPostLabModalOpen(false)}
         consultation={postLabConsultation}
         onWard={handleSendToWard}
-        onPharmacy={handleSendToPharmacy}
+        onPharmacy={() => setIsMedicationModalOpen(true)}
       />
     </DashboardLayout>
   );

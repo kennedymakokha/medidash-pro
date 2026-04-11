@@ -1,4 +1,4 @@
-// ConsultationFormDialog.tsx
+// MedicationFormDialog.tsx
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -9,8 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
@@ -24,52 +22,33 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Check } from "lucide-react";
-import { Consultation, LabTest } from "@/types/billing";
-import { useFetchlabOrdersForAVisitQuery } from "@/features/visitsSlice";
 import { Medication } from "@/types/pharmacy";
-
-export type ConsultationFormData = {
-  uuid: string;
-  patientId?: string;
-  patientMongoose?: string;
-  chiefComplaint: string;
-  symptoms: string;
-  prescribedTests: LabTest[];
-  notes: string;
-};
-
 
 export type MedicationFormData = {
   uuid: string;
   patientId?: string;
   patientMongoose?: string;
   prescribedMedications: Medication[];
- 
 };
+
 type Props = {
   open: boolean;
   onClose: () => void;
-  initialData?: ConsultationFormData | null;
-  labTests: LabTest[];
-  VisitTests: LabTest[];
-  onSubmit: (data: ConsultationFormData, totalFee: number) => Promise<void>;
+  initialData?: MedicationFormData | null;
+  medications: Medication[];
+  onSubmit: (data: MedicationFormData, totalFee: number) => Promise<void>;
 };
 
-export function ConsultationFormDialog({
+export function MedicationFormDialog({
   open,
   onClose,
   initialData,
-  labTests,
-  VisitTests,
+  medications,
   onSubmit,
 }: Props) {
-  const [formData, setFormData] = useState<ConsultationFormData>({
+  const [formData, setFormData] = useState<MedicationFormData>({
     uuid: "",
-    chiefComplaint: "",
-    symptoms: "",
-    prescribedTests: [],
-
-    notes: "",
+    prescribedMedications: [],
   });
 
   const [search, setSearch] = useState("");
@@ -80,17 +59,17 @@ export function ConsultationFormDialog({
   }, [initialData]);
 
   useEffect(() => {
-    const total = formData.prescribedTests.reduce(
-      (sum, t) => sum + (t.price || 0),
+    const total = formData.prescribedMedications.reduce(
+      (sum, m) => sum + (m.unitPrice || 0),
       0,
     );
     setTotalFee(total);
-  }, [formData.prescribedTests]);
+  }, [formData.prescribedMedications]);
 
-  const filteredTests =
+  const filteredMeds =
     search.length > 0
-      ? labTests.filter((t) =>
-          t.testName.toLowerCase().includes(search.toLowerCase()),
+      ? medications.filter((m) =>
+          m.name.toLowerCase().includes(search.toLowerCase()),
         )
       : [];
 
@@ -99,89 +78,63 @@ export function ConsultationFormDialog({
     await onSubmit(formData, totalFee);
     onClose();
   };
-  console.log(VisitTests);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-         
-
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? "Edit Consultation" : "New Consultation"}
+            {initialData ? "Edit Medications" : "Prescribe Medications"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {
-            <div>
-              <Label>Chief Complaint</Label>
-              <Textarea
-                value={formData.chiefComplaint}
-                onChange={(e) =>
-                  setFormData({ ...formData, chiefComplaint: e.target.value })
-                }
-                required
-              />
-            </div>
-          }
-       
           <div>
-            <Label>Symptoms</Label>
-            <Input
-              value={formData.symptoms}
-              onChange={(e) =>
-                setFormData({ ...formData, symptoms: e.target.value })
-              }
-              placeholder="fever, headache"
-            />
-          </div>
-
-          <div>
-            <Label>Prescribed Tests</Label>
+            <Label>Medications</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  {formData.prescribedTests.length
-                    ? formData.prescribedTests.map((t) => t.testName).join(", ")
-                    : "Search & select tests"}
+                  {formData.prescribedMedications.length
+                    ? formData.prescribedMedications.map((m) => m.name).join(", ")
+                    : "Search & select medications"}
                 </Button>
               </PopoverTrigger>
 
               <PopoverContent className="w-72 p-0">
                 <Command shouldFilter={false}>
                   <CommandInput
-                    placeholder="Search tests..."
+                    placeholder="Search medications..."
                     value={search}
                     onValueChange={setSearch}
                   />
 
                   {search.length > 0 && (
                     <>
-                      {filteredTests.length === 0 ? (
-                        <CommandEmpty>No tests found</CommandEmpty>
+                      {filteredMeds.length === 0 ? (
+                        <CommandEmpty>No medications found</CommandEmpty>
                       ) : (
                         <CommandGroup>
-                          {filteredTests.map((test) => {
-                            const checked = formData.prescribedTests.some(
-                              (t) => t._id === test._id,
+                          {filteredMeds.map((med) => {
+                            const checked = formData.prescribedMedications.some(
+                              (m) => m._id === med._id,
                             );
 
                             return (
                               <CommandItem
-                                key={test._id}
+                                key={med._id}
                                 onSelect={() => {
                                   setFormData((prev) => ({
                                     ...prev,
-                                    prescribedTests: checked
-                                      ? prev.prescribedTests.filter(
-                                          (t) => t._id !== test._id,
+                                    prescribedMedications: checked
+                                      ? prev.prescribedMedications.filter(
+                                          (m) => m._id !== med._id,
                                         )
-                                      : [...prev.prescribedTests, test],
+                                      : [...prev.prescribedMedications, med],
                                   }));
                                 }}
                                 className="flex justify-between"
                               >
-                                {test.testName}
+                                {med.name}
                                 {checked && <Check className="h-4 w-4" />}
                               </CommandItem>
                             );
@@ -195,18 +148,8 @@ export function ConsultationFormDialog({
             </Popover>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Total Lab Fee: <b>Ksh {totalFee}</b>
+              Total Medication Fee: <b>Ksh {totalFee}</b>
             </p>
-          </div>
-
-          <div>
-            <Label>Notes</Label>
-            <Textarea
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
-            />
           </div>
 
           <DialogFooter>

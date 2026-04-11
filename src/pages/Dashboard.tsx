@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHospitalData } from "@/contexts/HospitalDataContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -58,6 +58,7 @@ import {
   CreditCard,
   Beaker,
 } from "lucide-react";
+import { useSocket } from "@/contexts/SocketContext";
 function UnifiedDashboard() {
   const {
     userInfo: { user },
@@ -74,7 +75,7 @@ function UnifiedDashboard() {
   const { data: users } = useGetusersoverviewQuery({});
   const allusers = users !== undefined ? users : [];
   const docs = allusers.filter((p) => p.role === "doctor");
-
+ const { socket } = useSocket();
   const { data: overview, isLoading: overviewLoading } =
     useFetchpatientsoverviewsQuery({});
 
@@ -136,6 +137,19 @@ function UnifiedDashboard() {
       status: "in-consultation",
     },
   ]);
+  useEffect(() => {
+    if (!socket) return;
+    console.log(socket);
+    const onConnect = () => {
+      console.log("✅ Socket connected:", socket.id);
+      socket.emit("registerDevice",  user._id);
+    };
+    socket.on("connect", onConnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+    };
+  }, [socket]);
 
   const handleCallPatient = (id) => {
     setWaitingQueue((prev) =>

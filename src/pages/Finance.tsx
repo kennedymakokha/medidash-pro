@@ -58,7 +58,7 @@ export default function FinancePage() {
   return (
     <DashboardLayout title="Finance & Billing" subtitle="Manage invoices, payments, and revenue tracking">
       <div className="space-y-6">
-        <FinanceStats invoices={invoices} />
+        {/* <FinanceStats invoices={invoices} /> */}
         <InvoiceTable
           invoices={invoices}
           search={search}

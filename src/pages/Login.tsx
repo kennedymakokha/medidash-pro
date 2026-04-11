@@ -80,19 +80,6 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-  useEffect(() => {
-    if (!socket) return;
-    console.log(socket);
-    const onConnect = () => {
-      console.log("✅ Socket connected:", socket.id);
-      socket.emit("registerDevice", " user._id");
-    };
-    socket.on("connect", onConnect);
-
-    return () => {
-      socket.off("connect", onConnect);
-    };
-  }, [socket]);
 
   return (
     <div className="min-h-screen flex">

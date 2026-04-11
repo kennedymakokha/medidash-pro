@@ -23,18 +23,25 @@ import {
 import { Prescription, PrescriptionItem } from "@/types/pharmacy";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableSkeleton } from "@/components/loaders";
+import { useConsultations } from "@/hooks/useConsultations";
+import { useFetchvisitsQuery } from "@/features/visitsSlice";
 
 export default function DispensePage() {
   const [search, setSearch] = useState("");
   const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
   const [dispenseItems, setDispenseItems] = useState<PrescriptionItem[]>([]);
-
-  const { data: rxData, isLoading, refetch } = useFetchPrescriptionsQuery({
-    page: 1, limit: 10000, status: "pending",
-  });
+// const { data, isLoading, track:pharmacy, setTrack, refetch } = useConsultations();
+// console.log(data?.data);
+  const { data: rxData, isLoading, refetch } =  useFetchvisitsQuery({
+      page:1,
+      limit: 1000,
+      search: "",
+      track:"pharmacy",
+    });
+    console.log(rxData);
   const [dispense, { isLoading: dispensing }] = useDispensePrescriptionMutation();
 
-  const prescriptions: Prescription[] = (rxData?.data ?? []).filter((rx: Prescription) =>
+  const prescriptions: Prescription[] = [].filter((rx: Prescription) =>
     rx.patientName?.toLowerCase().includes(search.toLowerCase()) ||
     rx.doctorName?.toLowerCase().includes(search.toLowerCase())
   );
