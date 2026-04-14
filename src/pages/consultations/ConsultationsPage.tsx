@@ -85,7 +85,7 @@ export default function ConsultationsPage() {
       vId = data._id;
       await refetchLO();
       setPostLabConsultation(data);
-      setPostLabModalOpen(true);
+      setIsMedicationModalOpen(true);
       setFormData({
         uuid: data?.uuid,
         patientId: data?.patientMongoose,
