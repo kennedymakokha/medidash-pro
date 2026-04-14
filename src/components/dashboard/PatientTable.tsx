@@ -19,6 +19,8 @@ import { DataTable } from "@/components/table/DataTable";
 import { useCreatepatientMutation } from "@/features/patientSlice";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { AppointmentFormModal } from "../modals/AppointmentFormModal";
+import { useCreatevisitMutation } from "@/features/visitsSlice";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -56,11 +58,14 @@ export function PatientTable({
 }: PatientTableProps) {
   const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [deletePatientData, setDeletePatientData] = useState<Patient | null>(
     null,
   );
+  const [newVisitPatient, setNewVisitPatient] = useState<Patient | null>(null);
+
   const [postPatient] = useCreatepatientMutation({});
+  const [postVisit] = useCreatevisitMutation({});
   const deletePatient = async (patient: Patient | null) => {
     if (!patient) return;
     try {
@@ -79,6 +84,46 @@ export function PatientTable({
       description: `${Data.name} ${Data.uuid ? "has been Updated" : "has been added"} successfully.`,
     });
   };
+  const PatientRevisit = async (patient: Patient, doctorId: string) => {
+    if (!patient || !doctorId) return;
+
+    try {
+      // Construct a new visit entry
+      const newVisit = {
+        assignedDoctor: doctorId,
+        date: new Date().toISOString(),
+        status: "scheduled",
+      };
+
+      // Merge into patient record
+      const updatedPatient:any = {
+        ...patient,
+        visits: [...(patient.visits || []), newVisit],
+      };
+      updatedPatient.track = "new-visit";
+      updatedPatient.assignedDoctor= newVisit.assignedDoctor
+      console.log(updatedPatient);
+      // Post updated patient with doctor assignment
+      await postVisit(updatedPatient).unwrap();
+
+      await refetch?.();
+
+      toast({
+        title: "New Visit Added",
+        description: `${patient.name} has been assigned to doctor with ID ${doctorId}.`,
+      });
+
+      setNewVisitPatient(null);
+    } catch (error) {
+      console.error("Failed to add new visit", error);
+      toast({
+        title: "Error",
+        description: "Could not assign doctor to patient.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <DataTable
@@ -166,11 +211,12 @@ export function PatientTable({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     onClick={() => {
-                      setEditPatient(patient);
+                      setNewVisitPatient(patient);
                     }}
                   >
                     <Recycle className="w-4 h-4 mr-2" /> New Visit
                   </DropdownMenuItem>
+
                   <DropdownMenuItem
                     onClick={() => navigate(`/patients/${patient._id}`)}
                   >
@@ -210,6 +256,17 @@ export function PatientTable({
         open={!!deletePatientData}
         onOpenChange={() => setDeletePatientData(null)}
         onConfirm={() => deletePatient(deletePatientData)}
+      />
+      <AppointmentFormModal
+        open={!!newVisitPatient}
+        onOpenChange={() => setNewVisitPatient(null)}
+        preselectedPatient={newVisitPatient}
+        onSubmit={(appointment) => {
+          PatientRevisit(newVisitPatient!, appointment.doctorId);
+        }}
+        mode="add"
+        patients={[]} // not needed since preselectedPatient is passed
+        doctors={[]} // will be fetched inside AppointmentFormModal
       />
     </>
   );

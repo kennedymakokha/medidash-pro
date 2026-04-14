@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Doctor, mockDoctors } from "@/data/mockData";
+
 import { DoctorFormModal } from "@/components/modals/DoctorFormModal";
 import { ViewDoctorModal } from "@/components/modals/ViewDoctorModal";
 import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
@@ -31,6 +31,7 @@ import { useFetchdepartmentsQuery } from "@/features/departmentSlice";
 import { useGetusersQuery, usePostuserMutation } from "@/features/userSlice";
 import { StatsGridSkeleton, CardSkeleton } from "@/components/loaders";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Doctor } from "@/types/hospital";
 
 const statusStyles = {
   active: "bg-success/10 text-success border-success/20",

@@ -17,9 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Appointment, Patient } from "@/types/hospital";
+import { Appointment, Doctor, Patient } from "@/types/hospital";
 import { useHospitalData } from "@/contexts/HospitalDataContext";
-import { Doctor } from "@/data/mockData";
+
 import { useGetusersQuery } from "@/features/userSlice";
 import {
   useFetchpatientsoverviewsQuery,
@@ -34,7 +34,7 @@ interface AppointmentFormModalProps {
   doctors: Doctor[];
   appointment?: Appointment | null;
   preselectedPatient?: Patient | null;
-  onSubmit: (appointment: any) => void;
+  onSubmit: (appointment: Appointment) => void;
   mode: "add" | "edit";
 }
 
@@ -69,6 +69,7 @@ export function AppointmentFormModal({
   const [formData, setFormData] = useState({
     patientId: "",
     patientName: "",
+    doctorName: "",
     doctorId: "",
     doctorName: "",
     date: "",
@@ -76,6 +77,7 @@ export function AppointmentFormModal({
     type: "checkup" as Appointment["type"],
     status: "scheduled" as Appointment["status"],
     notes: "",
+    cancellationReason: "",
   });
   const convertTo24Hour = (time12: string) => {
     if (!time12) return "";
@@ -89,16 +91,16 @@ export function AppointmentFormModal({
 
     return `${h.toString().padStart(2, "0")}:${minutes}`;
   };
-const convertTo12Hour = (time24: string) => {
-  if (!time24) return "";
-  const [hours, minutes] = time24.split(":");
-  const h = parseInt(hours);
+  const convertTo12Hour = (time24: string) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(":");
+    const h = parseInt(hours);
 
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 || 12;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour12 = h % 12 || 12;
 
-  return `${hour12.toString().padStart(2, "0")}:${minutes} ${ampm}`;
-};
+    return `${hour12.toString().padStart(2, "0")}:${minutes} ${ampm}`;
+  };
   useEffect(() => {
     if (appointment && mode === "edit") {
       setFormData({
@@ -154,7 +156,7 @@ const convertTo12Hour = (time24: string) => {
   };
 
   const handleDoctorChange = (doctorId: string) => {
-    const selected = doctors.find((d: any) => d._id === doctorId);
+    const selected = doctors.find((d: Doctor) => d._id === doctorId);
 
     setFormData((prev) => ({
       ...prev,
@@ -163,8 +165,6 @@ const convertTo12Hour = (time24: string) => {
     }));
   };
 
-  
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -172,7 +172,7 @@ const convertTo12Hour = (time24: string) => {
       patientId: formData.patientId,
       patientName: formData.patientName,
       doctorId: formData.doctorId,
-      doctorName: formData.doctorName,
+
       date: formData.date,
       time: formData.time,
       type: formData.type,
@@ -192,25 +192,27 @@ const convertTo12Hour = (time24: string) => {
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="patient">Patient</Label>
-            <Select
-              value={formData.patientId}
-              onValueChange={handlePatientChange}
-              disabled={mode === "edit"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select patient" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients?.map((patient) => (
-                  <SelectItem key={patient._id} value={patient._id}>
-                    {patient.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!preselectedPatient && (
+            <div>
+              <Label htmlFor="patient">Patient</Label>
+              <Select
+                value={formData.patientId}
+                onValueChange={handlePatientChange}
+                disabled={mode === "edit"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients?.map((patient) => (
+                    <SelectItem key={patient._id} value={patient._id}>
+                      {patient.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label htmlFor="doctor">Doctor</Label>
             <Select
@@ -221,7 +223,7 @@ const convertTo12Hour = (time24: string) => {
                 <SelectValue placeholder="Select doctor" />
               </SelectTrigger>
               <SelectContent>
-                {doctors?.map((doctor: any) => (
+                {doctors?.map((doctor: Doctor) => (
                   <SelectItem key={doctor._id} value={doctor._id}>
                     {doctor.name}
                   </SelectItem>
@@ -229,57 +231,75 @@ const convertTo12Hour = (time24: string) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          {!preselectedPatient && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+  <Label htmlFor="time">Time</Label>
+  <Input
+    id="time"
+    type="time"
+    
+    value={formData.time24 || ""} 
+    onChange={(e) => {
+      const time24 = e.target.value; // e.g., "14:30"
+      
+      // 1. Calculate the 12h display version
+      const [hours, minutes] = time24.split(":");
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12;
+      const formatted12h = `${hour12.toString().padStart(2, "0")}:${minutes} ${ampm}`;
+
+      // 2. Update state: Keep 24h for the input, and 12h for your records
+      setFormData({ 
+        ...formData, 
+        time24: time24,        // Controls the input
+        timeDisplay: formatted12h // Used for your UI/Receipts
+      });
+    }}
+  />
+  {formData.timeDisplay && (
+    <p className="text-xs text-muted-foreground mt-1">
+      Selected: {formData.timeDisplay}
+    </p>
+  )}
+</div>
+            </div>
+          )}
+          {!preselectedPatient && (
             <div>
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
+              <Label htmlFor="type">Appointment Type</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value: Appointment["type"]) =>
+                  setFormData({ ...formData, type: value })
                 }
-                required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {appointmentTypes.map((type) => (
+                    <SelectItem key={type} value={type} className="capitalize">
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <Label htmlFor="time">Time</Label>
-              <Input
-                id="time"
-                type="time"
-                value={formData.time}
-                onChange={(e) => {
-                  const time24 = e.target.value;
-                  const [hours, minutes] = time24.split(":");
-                  const hour = parseInt(hours);
-                  const ampm = hour >= 12 ? "PM" : "AM";
-                  const hour12 = hour % 12 || 12;
-                  const formattedTime = `${hour12.toString().padStart(2, "0")}:${minutes} ${ampm}`;
-                  setFormData({ ...formData, time: formattedTime });
-                }}
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="type">Appointment Type</Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value: Appointment["type"]) =>
-                setFormData({ ...formData, type: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {appointmentTypes.map((type) => (
-                  <SelectItem key={type} value={type} className="capitalize">
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          )}
           {mode === "edit" && (
             <div>
               <Label htmlFor="status">Status</Label>
@@ -301,18 +321,20 @@ const convertTo12Hour = (time24: string) => {
               </Select>
             </div>
           )}
-          <div>
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
-              placeholder="Any additional notes..."
-              rows={3}
-            />
-          </div>
+          {!preselectedPatient && (
+            <div>
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                placeholder="Any additional notes..."
+                rows={3}
+              />
+            </div>
+          )}
           <DialogFooter>
             <Button
               type="button"
@@ -321,9 +343,15 @@ const convertTo12Hour = (time24: string) => {
             >
               Cancel
             </Button>
-            <Button type="submit">
-              {mode === "add" ? "Schedule" : "Save Changes"}
-            </Button>
+            {preselectedPatient ? (
+              <Button type="submit">
+               Record New Visit 
+              </Button>
+            ) : (
+              <Button type="submit">
+                {mode === "add" ? "Schedule" : "Save Changes"}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

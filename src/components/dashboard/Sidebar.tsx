@@ -62,14 +62,14 @@ const navItems: NavItem[] = [
     implemented: true,
   },
   // --- LABORATORY SECTION ---
-  {
-    label: "Lab Requests",
-    href: "/lab-orders",
-    icon: FlaskConical,
-    feature: "staff", // Or "lab" if you have a specific feature key
-    roles: ["admin", "doctor", "nurse", "lab_tech"],
-    implemented: true,
-  },
+  // {
+  //   label: "Lab Requests",
+  //   href: "/lab-orders",
+  //   icon: FlaskConical,
+  //   feature: "staff", // Or "lab" if you have a specific feature key
+  //   roles: ["admin", "doctor", "nurse", "lab_tech"],
+  //   implemented: true,
+  // },
   {
     label: "Lab Tests & Results",
     href: "/lab-tests",

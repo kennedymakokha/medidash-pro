@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist' | 'patient'|'lab_tech'|'finance';
+export type UserRole = 'admin' | 'doctor' | 'nurse' | 'receptionist' | 'patient' | 'lab_tech' | 'finance';
 
 export interface User {
   _id?: string;
@@ -12,6 +12,7 @@ export interface User {
 }
 
 export interface Patient {
+  _id?: string
   uuid: string;
   dob: string;
   id?: string;
@@ -35,6 +36,23 @@ export interface Patient {
   nationalId?: string
 }
 
+export interface Doctor {
+  _id?: string,
+  id: string;
+  name: string;
+  email: string;
+  phone_number: string;
+  specialty: string;
+  department: Department;
+  status: 'active' | 'on-leave' | 'inactive';
+  experience: number;
+  qualification: string;
+  avatar?: string;
+  schedule?: string;
+  role?: string
+  uuid?: string,
+}
+
 export interface Visit {
   _id: string;
   visitDate: string | null;
@@ -53,14 +71,16 @@ export interface Visit {
 
 export interface Appointment {
   id: string;
-  patientId: { _id: string };
-
-  doctorId: { _id: string };
-  
+  patientId: Patient | string;
+  uuid?: string
+  doctorId: Doctor | string
+  cancellationReason?: string
   date: string;
   time: string;
-  type: 'checkup' | 'followup' | 'emergency' | 'surgery';
-  status: 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
+  patientName?:string;
+  doctorName: string
+  type?: 'checkup' | 'followup' | 'emergency' | 'surgery';
+  status?: 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
   notes?: string;
 }
 

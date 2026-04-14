@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Patient } from "@/types/hospital";
-import { mockPatients } from "@/data/mockData";
+
 import {
   DropdownMenu,
   DropdownMenuContent,

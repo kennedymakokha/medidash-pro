@@ -4,11 +4,19 @@ import { toast } from "@/hooks/use-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useFetchpatientsoverviewsQuery } from "@/features/patientSlice";
-import { useCreatevisitMutation, useFetchvisitsQuery } from "@/features/visitsSlice";
-import { VitalsStats, calculateEWS, getEWSStatus } from "./vitals/components/VitalsStats";
+import {
+  useCreatevisitMutation,
+  useFetchvisitsQuery,
+} from "@/features/visitsSlice";
+import {
+  VitalsStats,
+  calculateEWS,
+  getEWSStatus,
+} from "./vitals/components/VitalsStats";
 import { VitalsTable } from "./vitals/components/VitalsTable";
 import { VitalsFormDialog } from "./vitals/components/VitalsFormDialog";
 import { VitalsViewDialog } from "./vitals/components/VitalsViewDialog";
+import { useSocket } from "@/contexts/SocketContext";
 
 const defaultForm = {
   uuid: "",
@@ -30,32 +38,51 @@ export default function VitalsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [filter, setFilter] = useState("");
-  const [editingVital, setEditingVital] = useState<any>(null);
-  const [viewingVital, setViewingVital] = useState<any>(null);
+  const [editingVital, setEditingVital] = useState(null);
+  const [viewingVital, setViewingVital] = useState(null);
   const [page] = useState(1);
   const [formData, setFormData] = useState(defaultForm);
-
+  const { socket } = useSocket();
   const [postVital] = useCreatevisitMutation();
-  const { userInfo: { user } } = useSelector((state: RootState) => state.auth);
+  const {
+    userInfo: { user },
+  } = useSelector((state: RootState) => state.auth);
 
   const { data: visitsData, refetch } = useFetchvisitsQuery({
-    limit: 5, page, search: "", track: "triage",
+    limit: 5,
+    page,
+    search: "",
+    track: "triage",
   });
 
   const { data: allData } = useFetchvisitsQuery({
-    limit: 100000000000, page, search: "",
+    limit: 100000000000,
+    page,
+    search: "",
   });
 
   const visits = visitsData?.data ?? [];
   const allVitals = allData?.data ?? [];
+  useEffect(() => {
+    if (!socket) return;
+    const onUpdate = (data) => {
+      console.log("✅ Updated:", data);
+      refetch(); // 👈 THIS is required
+    };
+ 
+    socket.on("update:payment", onUpdate);
 
+    return () => {
+      socket.off("update:payment", onUpdate);
+    };
+  }, [socket]);
   useEffect(() => {
     if (!filter) return;
     const timer = setTimeout(() => setFilter(""), 60000);
     return () => clearTimeout(timer);
   }, [filter]);
 
-  const handleRecord = (data: any) => {
+  const handleRecord = (data) => {
     setFormData({
       ...defaultForm,
       uuid: data.uuid,
@@ -66,7 +93,7 @@ export default function VitalsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEdit = (vital: any) => {
+  const handleEdit = (vital) => {
     setEditingVital(vital);
     setFormData({
       uuid: vital.uuid ?? "",
@@ -96,7 +123,7 @@ export default function VitalsPage() {
         oxygenSaturation: parseInt(formData.oxygenSaturation),
       };
 
-      const ewsScore = calculateEWS(vitalsPayload as any);
+      const ewsScore = calculateEWS(vitalsPayload );
       const ewsStatus = getEWSStatus(ewsScore);
 
       await postVital({
@@ -109,19 +136,29 @@ export default function VitalsPage() {
       }).unwrap();
 
       await refetch();
-      toast({ title: "Vitals Recorded", description: "Vital record saved successfully." });
+      toast({
+        title: "Vitals Recorded",
+        description: "Vital record saved successfully.",
+      });
       setIsFormOpen(false);
       setFormData(defaultForm);
     } catch (error) {
       console.error(error);
-      toast({ title: "Error", description: "Failed to save vital record.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to save vital record.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <DashboardLayout title="Vitals" subtitle="Monitor and record patient vital signs">
+    <DashboardLayout
+      title="Vitals"
+      subtitle="Monitor and record patient vital signs"
+    >
       <div className="space-y-6">
-        <VitalsStats setFilter={setFilter} vitals={allVitals as any} />
+        <VitalsStats setFilter={setFilter} vitals={allVitals } />
 
         <VitalsTable
           filter={filter}
@@ -130,16 +167,18 @@ export default function VitalsPage() {
               ? visits
               : filter === "all"
                 ? allVitals
-                : allVitals.filter((v: any) => getEWSStatus(calculateEWS(v as any)) === filter)
+                : allVitals.filter(
+                    (v) => getEWSStatus(calculateEWS(v )) === filter,
+                  )
           }
           search={searchQuery}
           onSearchChange={setSearchQuery}
-          onRecord={handleRecord as any}
-          onView={(v: any) => {
+          onRecord={handleRecord }
+          onView={(v) => {
             setViewingVital(v);
             setIsViewOpen(true);
           }}
-          onEdit={handleEdit as any}
+          onEdit={handleEdit }
         />
       </div>
 
@@ -147,7 +186,7 @@ export default function VitalsPage() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         formData={formData}
-        onChange={setFormData as any}
+        onChange={setFormData }
         onSubmit={handleSubmit}
         isEditing={!!editingVital}
       />

@@ -234,23 +234,6 @@ export const mockDepartments: Department[] = [
   { _id: '6', name: 'ICU', head: 'Dr. Lisa Anderson', staffCount: 28, patientCount: 12, consultationFee: 300 },
 ];
 
-export interface Doctor {
-  _id?: string,
-  id: string;
-  name: string;
-  email: string;
-  phone_number: string;
-  specialty: string;
-  department: any;
-  status: 'active' | 'on-leave' | 'inactive';
-  experience: number;
-  qualification: string;
-  avatar?: string;
-  schedule?: string;
-  role?: string
-  uuid?: string,
-}
-
 export const mockDoctors: Doctor[] = [
   {
     id: '1',

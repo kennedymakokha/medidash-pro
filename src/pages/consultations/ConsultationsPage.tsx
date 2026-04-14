@@ -4,7 +4,7 @@ import { ConsultationStats } from "./Components/ConsultationStats";
 import { ConsultationTabs } from "./Components/ConsultationTabs";
 import { ConsultationFormDialog } from "./Components/ConsultationFormDialog";
 import { ConsultationViewDialog } from "./Components/ConsultationViewDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Consultation, LabTest } from "@/types/billing";
 import { useFetchlabsQuery } from "@/features/labTestSlice";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { PostLabActionDialog } from "./Components/postlabModal";
 import { MedicationFormDialog } from "./Components/medicationFormDialog";
 import { useFetchMedicationsQuery } from "@/features/pharmacySlice";
 import { Medication } from "@/types/pharmacy";
+import { useSocket } from "@/contexts/SocketContext";
 
 export default function ConsultationsPage() {
   const { data, isLoading, track, setTrack, refetch } = useConsultations();
@@ -37,7 +38,7 @@ export default function ConsultationsPage() {
     page: 1,
     limit: 200000000,
   });
-
+  const { socket } = useSocket();
   const [postLabModalOpen, setPostLabModalOpen] = useState(false);
   const [postLabConsultation, setPostLabConsultation] =
     useState<Consultation | null>(null);
@@ -158,7 +159,19 @@ export default function ConsultationsPage() {
     setSelectedConsultation(consultation);
     setIsViewModalOpen(true);
   };
+  useEffect(() => {
+    if (!socket) return;
+    const onUpdate = (data) => {
+     
+      refetch(); // 👈 THIS is required
+    };
+ 
+    socket.on("update:visit", onUpdate);
 
+    return () => {
+      socket.off("update:visit", onUpdate);
+    };
+  }, [socket]);
   if (isLoading) {
     return (
       <DashboardLayout title="Consultations">

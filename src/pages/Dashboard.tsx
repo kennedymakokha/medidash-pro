@@ -75,7 +75,7 @@ function UnifiedDashboard() {
   const { data: users } = useGetusersoverviewQuery({});
   const allusers = users !== undefined ? users : [];
   const docs = allusers.filter((p) => p.role === "doctor");
- const { socket } = useSocket();
+  const { socket } = useSocket();
   const { data: overview, isLoading: overviewLoading } =
     useFetchpatientsoverviewsQuery({});
 
@@ -95,7 +95,7 @@ function UnifiedDashboard() {
     useState(null);
   const [viewPatient, setViewPatient] = useState(null);
 
-  console.log(patients);
+
   // Role-based data
   const myPatients =
     role === "doctor"
@@ -138,16 +138,22 @@ function UnifiedDashboard() {
     },
   ]);
   useEffect(() => {
-    if (!socket) return;
     console.log(socket);
+    if (!socket) return;
+
     const onConnect = () => {
       console.log("✅ Socket connected:", socket.id);
-      socket.emit("registerDevice",  user._id);
+      socket.emit("registerDevice", user._id);
+    };
+    const onUpdate = (data:any) => {
+      console.log("✅ Supdated:", data);
     };
     socket.on("connect", onConnect);
+    socket.on("visit:update", onUpdate);
 
     return () => {
       socket.off("connect", onConnect);
+      socket.off("visit:update", onUpdate);
     };
   }, [socket]);
 
